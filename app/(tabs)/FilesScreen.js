@@ -44,7 +44,7 @@ export default function FilesScreen() {
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: wp(7),
-    paddingTop: StatusBar.currentHeight,
+    // paddingTop: StatusBar.currentHeight,
   },
   screenTitle: {
     flexDirection: "row",

@@ -83,7 +83,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: wp(4),
-    paddingTop: StatusBar.currentHeight,
+    // paddingTop: StatusBar.currentHeight,
     flex: 1,
     backgroundColor: "#FBFBFB",
   },

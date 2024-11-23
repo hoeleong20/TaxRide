@@ -62,7 +62,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: wp(7),
-    paddingTop: StatusBar.currentHeight,
+    // paddingTop: StatusBar.currentHeight,
   },
   logoContainer: {
     alignItems: "center",

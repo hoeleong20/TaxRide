@@ -11,7 +11,7 @@ export default function AddScreen() {
     <View style={styles.container}>
       <Text>Add File</Text>
 
-      {/* <View>
+      <View>
         <Pressable onPress={() => console.log("1")} style={styles.rowContainer}>
           <Text>Take Photo</Text>
         </Pressable>
@@ -21,7 +21,7 @@ export default function AddScreen() {
         <Pressable onPress={() => console.log("1")} style={styles.rowContainer}>
           <Text>Cancel</Text>
         </Pressable>
-      </View> */}
+      </View>
     </View>
   );
 }

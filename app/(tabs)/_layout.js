@@ -28,6 +28,20 @@ export default function TabsLayout() {
         options={{
           title: "",
         }}
+        listeners={{
+          tabPress: (e) => {
+            // Prevent default action
+            e.preventDefault();
+            alert("Action");
+          },
+        }}
+        // name="AddScreen"
+        // options={{
+        //   title: "",
+        //   presentation: "transparentModal",
+        //   animation: "fade",
+        //   headerShown: false,
+        // }}
       />
       <Tabs.Screen
         name="FilesScreen"

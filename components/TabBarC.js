@@ -91,6 +91,7 @@ export default function TabBarC({ state, descriptors, navigation }) {
 
         return (
           <TouchableOpacity
+            key={route.key} // Add this to resolve the warning
             accessibilityRole="button"
             accessibilityState={isFocused ? { selected: true } : {}}
             accessibilityLabel={options.tabBarAccessibilityLabel}

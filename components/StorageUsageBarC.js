@@ -14,7 +14,7 @@ export default function StorageUsageBarC({ storagePerc }) {
         fill={storagePerc}
         rotation={0}
         tintColor="#0A7BCC"
-        onAnimationComplete={() => console.log("onAnimationComplete")}
+        // onAnimationComplete={() => console.log("onAnimationComplete")}
         backgroundColor="#D8EDFD"
         lineCap="round"
         backgroundWidth={wp(4)}
