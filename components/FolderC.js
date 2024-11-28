@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import { Text, View, StyleSheet, Pressable } from "react-native";
 import {
   widthPercentageToDP as wp,
@@ -5,10 +6,13 @@ import {
 } from "react-native-responsive-screen";
 import Icon from "react-native-vector-icons/Ionicons";
 
-export default function FolderC({ folderName }) {
+export default function FolderC({ folderName, navigateToPath }) {
   return (
     <View>
-      <Pressable onPress={() => console.log("1")} style={styles.rowContainer}>
+      <Pressable
+        onPress={() => router.push(navigateToPath)}
+        style={styles.rowContainer}
+      >
         <View>
           <View style={styles.rowStyle}>
             <Icon

@@ -5,53 +5,53 @@ import {
   useWindowDimensions,
   Image,
   TextInput,
-  StatusBar,
-  SafeAreaView,
 } from "react-native";
 import { useState } from "react";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
-import ButtonC from "../components/ButtonC";
-import TextInputC from "../components/TextInputC";
-import BackButtonC from "../components/BackButtonC";
+import FileScreenTitleC from "../../../components/FileScreenTitleC";
+import FolderC from "../../../components/FolderC";
 
-const logoImg = require("../assets/adaptive-icon.png");
-
-export default function ForgotPasswordScreen() {
+export default function FilesYScreen() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar />
-      <BackButtonC border={true} />
-      <View style={styles.logoContainer}>
-        <Image source={logoImg} style={styles.logoImgStyle} />
+    <View style={styles.container}>
+      <FileScreenTitleC screenTitleText={"2023"} />
+      <View>
+        <FolderC
+          folderName={"Education"}
+          navigateToPath="/(tabs)/FilesScreen/FilesYCScreen"
+        />
+        <FolderC
+          folderName={"Medical"}
+          navigateToPath="/(tabs)/FilesScreen/FilesYCScreen"
+        />
+        <FolderC
+          folderName={"Lifestyle"}
+          navigateToPath="/(tabs)/FilesScreen/FilesYCScreen"
+        />
       </View>
-      <Text style={styles.titleText}>Restore Password</Text>
-      <TextInputC
-        placeholderText={"Enter your email"}
-        value={username}
-        onChangeText={setUsername}
-      />
-      <Text style={styles.descText}>
-        You will receive email with password reset link
-      </Text>
-      <ButtonC
-        textContent="Send Email"
-        buttonStyle={styles.loginButton}
-        textStyle={styles.loginText}
-      />
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    marginHorizontal: wp(7),
-    // paddingTop: StatusBar.currentHeight,
+    paddingTop: hp(7),
+    paddingHorizontal: wp(7),
+  },
+  screenTitle: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: hp(3),
+  },
+  screenTitleText: {
+    fontSize: wp(6),
+    marginLeft: wp(4),
   },
   logoContainer: {
     alignItems: "center",

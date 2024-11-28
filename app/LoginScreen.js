@@ -24,7 +24,7 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar/>
+      <StatusBar />
       <BackButtonC border={true} />
       <View style={styles.logoContainer}>
         <Image source={logoImg} style={styles.logoImgStyle} />
@@ -61,7 +61,7 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: wp(7),
+    marginHorizontal: wp(7),
     // paddingTop: StatusBar.currentHeight,
   },
   logoContainer: {

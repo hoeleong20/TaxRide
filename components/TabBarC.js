@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   View,
   StyleSheet,
@@ -13,30 +13,9 @@ import {
 } from "react-native-responsive-screen";
 import Icon from "react-native-vector-icons/FontAwesome6";
 import { LinearGradient } from "expo-linear-gradient";
-
-// export default function TabBarC() {
-//   const [iconColor, setIconColor] = useState("#CCCCCC");
-//   return (
-//     <View style={styles.container}>
-//       <Pressable onPress={() => console.log("1")}>
-//         <Icon name="home" size={wp(7)} style={styles.icon} color={iconColor} />
-//         <Text>Home</Text>
-//       </Pressable>
-//       <Pressable onPress={() => console.log("1")} style={styles.addIconButton}>
-//         <Icon name="add" size={wp(7)} style={styles.addIcon} color="white" />
-//       </Pressable>
-//       <Pressable onPress={() => console.log("1")}>
-//         <Icon
-//           name="folder"
-//           size={wp(7)}
-//           style={styles.icon}
-//           color={iconColor}
-//         />
-//         <Text>Files</Text>
-//       </Pressable>
-//     </View>
-//   );
-// }
+import { useActionSheet } from "@expo/react-native-action-sheet";
+import * as ImagePicker from "expo-image-picker";
+import * as Linking from "expo-linking";
 
 export default function TabBarC({ state, descriptors, navigation }) {
   const icons = {
@@ -57,6 +36,133 @@ export default function TabBarC({ state, descriptors, navigation }) {
     ),
   };
 
+  const { showActionSheetWithOptions } = useActionSheet();
+
+  const handleAddAction = () => {
+    const title = "Select a Photo";
+    const options = ["Take Photo ...", "Choose From Library ...", "Cancel"];
+    const cancelButtonIndex = 2;
+
+    showActionSheetWithOptions(
+      {
+        title,
+        options,
+        cancelButtonIndex,
+      },
+      (buttonIndex) => {
+        if (buttonIndex === 0) {
+          console.log("Take Photo selected");
+          handleCameraPermission();
+        } else if (buttonIndex === 1) {
+          console.log("Choose From Library selected");
+          handleGalleryPermission();
+        }
+      }
+    );
+  };
+
+  const [cameraStatus, requestCameraPermission] =
+    ImagePicker.useCameraPermissions();
+
+  const [galleryStatus, requestGalleryPermission] =
+    ImagePicker.useMediaLibraryPermissions();
+
+  const handleCameraPermission = useCallback(async () => {
+    if (cameraStatus) {
+      if (
+        cameraStatus.status === ImagePicker.PermissionStatus.UNDETERMINED ||
+        (cameraStatus.status === ImagePicker.PermissionStatus.DENIED &&
+          cameraStatus.canAskAgain)
+      ) {
+        const permission = await requestCameraPermission();
+        if (permission.granted) {
+          await handleLaunchCamera();
+        }
+      } else if (cameraStatus.status === ImagePicker.PermissionStatus.DENIED) {
+        console.log("2");
+        const permission = await requestCameraPermission();
+        if (permission.granted) {
+          console.log("3");
+          await handleLaunchCamera();
+        }
+        await Linking.openSettings();
+      } else {
+        await handleLaunchCamera();
+      }
+    }
+  }, [cameraStatus, handleLaunchCamera, requestCameraPermission]);
+
+  const handleGalleryPermission = useCallback(async () => {
+    if (cameraStatus) {
+      if (
+        cameraStatus.status === ImagePicker.PermissionStatus.UNDETERMINED ||
+        (cameraStatus.status === ImagePicker.PermissionStatus.DENIED &&
+          cameraStatus.canAskAgain)
+      ) {
+        const permission = await requestCameraPermission();
+        if (permission.granted) {
+          await handleLaunchImageLibrary();
+        }
+      } else if (cameraStatus.status === ImagePicker.PermissionStatus.DENIED) {
+        console.log("2");
+        const permission = await requestCameraPermission();
+        if (permission.granted) {
+          console.log("3");
+          await handleLaunchImageLibrary();
+        }
+        await Linking.openSettings();
+      } else {
+        await handleLaunchImageLibrary();
+      }
+    }
+  }, [galleryStatus, handleLaunchImageLibrary, requestGalleryPermission]);
+
+  const [image, setImage] = useState("");
+
+  const handleLaunchCamera = useCallback(async () => {
+    console.log("1");
+    try {
+      // No permissions request is necessary for launching the image library
+      let result = await ImagePicker.launchCameraAsync({
+        // mediaTypes: ["images", "videos"],
+        // allowsEditing: true,
+        // aspect: [4, 3],
+        // quality: 1,
+      });
+      console.log("2");
+
+      console.log(result);
+
+      if (!result.canceled) {
+        setImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      alert("error : " + error.message);
+    }
+  }, []);
+
+  const handleLaunchImageLibrary = async () => {
+    console.log("1");
+    try {
+      // No permissions request is necessary for launching the image library
+      let result = await ImagePicker.launchImageLibraryAsync({
+        // mediaTypes: ["images", "videos"],
+        // allowsEditing: true,
+        // aspect: [4, 3],
+        // quality: 1,
+      });
+      console.log("2");
+
+      console.log(result);
+
+      if (!result.canceled) {
+        setImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      alert("error : " + error.message);
+    }
+  };
+
   return (
     <View style={styles.container}>
       {state.routes.map((route, index) => {
@@ -70,15 +176,31 @@ export default function TabBarC({ state, descriptors, navigation }) {
 
         const isFocused = state.index === index;
 
-        const onPress = () => {
-          const event = navigation.emit({
-            type: "tabPress",
-            target: route.key,
-            canPreventDefault: true,
-          });
+        // const onPress = () => {
+        //   const event = navigation.emit({
+        //     type: "tabPress",
+        //     target: route.key,
+        //     canPreventDefault: true,
+        //   });
 
-          if (!isFocused && !event.defaultPrevented) {
-            navigation.navigate(route.name, route.params);
+        //   if (!isFocused && !event.defaultPrevented) {
+        //     navigation.navigate(route.name, route.params);
+        //   }
+        // };
+
+        const onPress = () => {
+          if (route.name === "AddScreen") {
+            handleAddAction();
+          } else {
+            const event = navigation.emit({
+              type: "tabPress",
+              target: route.key,
+              canPreventDefault: true,
+            });
+
+            if (!isFocused && !event.defaultPrevented) {
+              navigation.navigate(route.name);
+            }
           }
         };
 

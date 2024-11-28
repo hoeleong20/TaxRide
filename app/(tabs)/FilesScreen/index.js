@@ -7,6 +7,7 @@ import {
   TextInput,
   SafeAreaView,
   Pressable,
+  ScrollView,
 } from "react-native";
 import { useState } from "react";
 import { StatusBar } from "react-native";
@@ -14,9 +15,9 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
-import FolderC from "../../components/FolderC";
+import FolderC from "../../../components/FolderC";
 
-const logoImg = require("../../assets/adaptive-icon.png");
+const logoImg = require("../../../assets/adaptive-icon.png");
 
 export default function FilesScreen() {
   const [username, setUsername] = useState("");
@@ -25,26 +26,40 @@ export default function FilesScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar />
-      <View style={styles.screenTitle}>
-        <Text style={styles.screenTitleText}>My Folders</Text>
-      </View>
-      <View>
-        <FolderC folderName={"2024"} />
-        <FolderC folderName={"2023"} />
-        <FolderC folderName={"2022"} />
-        <FolderC folderName={"2021"} />
-      </View>
-      {/* <Pressable onPress={() => console.log("1")} style={styles.addIconButton}>
-        <Icon name="add" size={wp(7)} style={styles.addIcon} color="white" />
-      </Pressable> */}
+      <ScrollView style={styles.innerContainer}>
+        <View style={styles.screenTitle}>
+          <Text style={styles.screenTitleText}>My Folders</Text>
+        </View>
+        <View>
+          <FolderC
+            folderName={"2024"}
+            navigateToPath="/(tabs)/FilesScreen/FilesYScreen"
+          />
+          <FolderC
+            folderName={"2023"}
+            navigateToPath="/(tabs)/FilesScreen/FilesYScreen"
+          />
+          <FolderC
+            folderName={"2022"}
+            navigateToPath="/(tabs)/FilesScreen/FilesYScreen"
+          />
+          <FolderC
+            folderName={"2021"}
+            navigateToPath="/(tabs)/FilesScreen/FilesYScreen"
+          />
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: wp(7),
     // paddingTop: StatusBar.currentHeight,
+  },
+  innerContainer: {
+    paddingTop: hp(1),
+    paddingHorizontal: wp(7),
   },
   screenTitle: {
     flexDirection: "row",

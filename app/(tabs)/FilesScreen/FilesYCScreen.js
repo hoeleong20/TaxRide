@@ -5,53 +5,45 @@ import {
   useWindowDimensions,
   Image,
   TextInput,
-  StatusBar,
-  SafeAreaView,
 } from "react-native";
 import { useState } from "react";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
-import ButtonC from "../components/ButtonC";
-import TextInputC from "../components/TextInputC";
-import BackButtonC from "../components/BackButtonC";
+import FileC from "../../../components/FileC";
+import FileScreenTitleC from "../../../components/FileScreenTitleC";
 
-const logoImg = require("../assets/adaptive-icon.png");
+const logoImg = require("../../../assets/adaptive-icon.png");
 
-export default function ForgotPasswordScreen() {
+export default function FilesYCScreen() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar />
-      <BackButtonC border={true} />
-      <View style={styles.logoContainer}>
-        <Image source={logoImg} style={styles.logoImgStyle} />
+    <View style={styles.container}>
+      <FileScreenTitleC screenTitleText={"Lifestyle"} />
+      <View>
+        <FileC fileName={"Invoice"} fileDate={"25 Oct 2023"} fileSize={2.4} />
+        <FileC fileName={"Invoice"} fileDate={"25 Oct 2023"} fileSize={2.4} />
       </View>
-      <Text style={styles.titleText}>Restore Password</Text>
-      <TextInputC
-        placeholderText={"Enter your email"}
-        value={username}
-        onChangeText={setUsername}
-      />
-      <Text style={styles.descText}>
-        You will receive email with password reset link
-      </Text>
-      <ButtonC
-        textContent="Send Email"
-        buttonStyle={styles.loginButton}
-        textStyle={styles.loginText}
-      />
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    marginHorizontal: wp(7),
-    // paddingTop: StatusBar.currentHeight,
+    paddingHorizontal: wp(7),
+    paddingTop: hp(7),
+  },
+  screenTitle: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: hp(3),
+  },
+  screenTitleText: {
+    fontSize: wp(6),
+    marginLeft: wp(4),
   },
   logoContainer: {
     alignItems: "center",

@@ -6,6 +6,7 @@ import {
   StatusBar,
   SafeAreaView,
   Pressable,
+  ScrollView,
 } from "react-native";
 import { useState } from "react";
 import {
@@ -27,65 +28,72 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar />
-      <View style={styles.topBar}>
-        <View style={styles.profileContainer}>
-          <Image source={profileImage} style={styles.profileImageStyle} />
-          <View style={styles.profileTextContainer}>
-            <Text style={styles.profileText1}>Welcome</Text>
-            <Text style={styles.profileText2}>{name}</Text>
+      <ScrollView style={styles.innerContainer}>
+        <View style={styles.topBar}>
+          <View style={styles.profileContainer}>
+            <Image source={profileImage} style={styles.profileImageStyle} />
+            <View style={styles.profileTextContainer}>
+              <Text style={styles.profileText1}>Welcome</Text>
+              <Text style={styles.profileText2}>{name}</Text>
+            </View>
           </View>
-        </View>
-        <View style={styles.notificationButton}>
-          <NotificationButtonC />
-        </View>
-      </View>
-      <View>
-        <Text style={[styles.titleText, styles.marginBtm]}>Storage Usage</Text>
-        <View style={styles.StorageUsageContainer}>
-          <StorageUsageBarC storagePerc={cloudStoragePerc} />
-          <View style={styles.StorageUsageText}>
-            <Text style={styles.StorageUsageText1}>Cloud Storage</Text>
-            <Text style={styles.StorageUsageText2}>131 GB of 2 TB used</Text>
-          </View>
-        </View>
-        <View style={styles.StorageUsageContainer}>
-          <StorageUsageBarC storagePerc={internalStoragePerc} />
-          <View style={styles.StorageUsageText}>
-            <Text style={styles.StorageUsageText1}>Internal Storage</Text>
-            <Text style={styles.StorageUsageText2}>85 GB of 128 GB used</Text>
-          </View>
-        </View>
-      </View>
-      <View>
-        <View style={styles.rowContainer}>
-          <Text style={styles.titleText}>Recent Files</Text>
-          <View style={styles.altContainer}>
-            <Text style={styles.altText}>View More</Text>
-            <Icon name="arrow-forward-sharp" size={wp(5)} color="#0066FF" />
+          <View style={styles.notificationButton}>
+            <NotificationButtonC />
           </View>
         </View>
         <View>
-          <FileC fileName={"Invoice"} fileDate={"25 Oct 2023"} fileSize={2.4} />
-          <FileC
-            fileName={"Camera Images"}
-            fileDate={"19 Oct 2023"}
-            fileSize={34}
-          />
+          <Text style={[styles.titleText, styles.marginBtm]}>
+            Storage Usage
+          </Text>
+          <View style={styles.StorageUsageContainer}>
+            <StorageUsageBarC storagePerc={cloudStoragePerc} />
+            <View style={styles.StorageUsageText}>
+              <Text style={styles.StorageUsageText1}>Cloud Storage</Text>
+              <Text style={styles.StorageUsageText2}>131 GB of 2 TB used</Text>
+            </View>
+          </View>
+          <View style={styles.StorageUsageContainer}>
+            <StorageUsageBarC storagePerc={internalStoragePerc} />
+            <View style={styles.StorageUsageText}>
+              <Text style={styles.StorageUsageText1}>Internal Storage</Text>
+              <Text style={styles.StorageUsageText2}>85 GB of 128 GB used</Text>
+            </View>
+          </View>
         </View>
-      </View>
-      {/* <Pressable onPress={() => console.log("1")} style={styles.addIconButton}>
-        <Icon name="add" size={wp(7)} style={styles.addIcon} color="white" />
-      </Pressable> */}
+        <View>
+          <View style={styles.rowContainer}>
+            <Text style={styles.titleText}>Recent Files</Text>
+            <View style={styles.altContainer}>
+              <Text style={styles.altText}>View More</Text>
+              <Icon name="arrow-forward-sharp" size={wp(5)} color="#0066FF" />
+            </View>
+          </View>
+          <View>
+            <FileC
+              fileName={"Invoice"}
+              fileDate={"25 Oct 2023"}
+              fileSize={2.4}
+            />
+            <FileC
+              fileName={"Camera Images"}
+              fileDate={"19 Oct 2023"}
+              fileSize={34}
+            />
+          </View>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: wp(4),
     // paddingTop: StatusBar.currentHeight,
     flex: 1,
     backgroundColor: "#FBFBFB",
+  },
+  innerContainer: {
+    paddingHorizontal: wp(4),
   },
   topBar: {
     flexDirection: "row",
