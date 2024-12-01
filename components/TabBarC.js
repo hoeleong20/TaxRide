@@ -16,6 +16,9 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useActionSheet } from "@expo/react-native-action-sheet";
 import * as ImagePicker from "expo-image-picker";
 import * as Linking from "expo-linking";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+// import Parse from "parse/react-native.js";
+import * as FileSystem from "expo-file-system";
 
 export default function TabBarC({ state, descriptors, navigation }) {
   const icons = {
@@ -130,8 +133,13 @@ export default function TabBarC({ state, descriptors, navigation }) {
         // quality: 1,
       });
       console.log("2");
+      // saveFile();
+      console.log(result.assets[0]?.uri);
+      saveImage(result.assets[0]?.uri);
 
-      console.log(result);
+      // AsyncStorage.setItem("savedImage", JSON.stringify(result));
+      // const jsonValue = await AsyncStorage.getItem("savedImage");
+      // console.log(JSON.parse(jsonValue));
 
       if (!result.canceled) {
         setImage(result.assets[0].uri);
@@ -152,14 +160,57 @@ export default function TabBarC({ state, descriptors, navigation }) {
         // quality: 1,
       });
       console.log("2");
-
-      console.log(result);
+      console.log(result.assets[0]?.uri);
+      saveImage(result.assets[0]?.uri);
 
       if (!result.canceled) {
         setImage(result.assets[0].uri);
       }
     } catch (error) {
       alert("error : " + error.message);
+    }
+  };
+
+  // async function saveFile() {
+  //   console.log("run save file");
+
+  //   // 1. Create a file
+  //   const { base64, fileName } = image;
+  //   const parseFile = new Parse.File(fileName, { base64 });
+
+  //   // 2. Save the file
+  //   try {
+  //     const responseFile = await parseFile.save();
+  //     const Gallery = Parse.Object.extend("Gallery");
+  //     const gallery = new Gallery();
+  //     gallery.set("picture", responseFile);
+
+  //     await gallery.save();
+  //     Alert.alert("The file has been saved to Back4app.");
+  //   } catch (error) {
+  //     console.log(
+  //       "The file either could not be read, or could not be saved to Back4app."
+  //     );
+  //   }
+  // }
+
+  const saveImage = async (imageUri) => {
+    if (!imageUri) {
+      console.error("Error: imageUri is null or undefined");
+      return;
+    }
+    console.log("Image URI:", imageUri); // Log the URI
+    const fileName = `my-image-${Date.now()}.png`;
+    const destinationPath = `${FileSystem.documentDirectory}${fileName}`;
+
+    try {
+      await FileSystem.copyAsync({
+        from: imageUri,
+        to: destinationPath,
+      });
+      console.log("Image saved to:", destinationPath);
+    } catch (error) {
+      console.error("Error saving image:", error);
     }
   };
 
