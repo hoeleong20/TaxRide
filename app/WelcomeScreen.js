@@ -22,18 +22,13 @@ const logoImg = require("../assets/adaptive-icon.png");
 export default function WelcomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar backgroundColor="#61dafb" />
+      <StatusBar barStyle="default" />
       <View style={styles.topContainer}></View>
       <View style={styles.bottomContainer}>
         <View style={styles.logoContainer}>
           <Image source={logoImg} style={styles.logoImgStyle} />
           <Text style={styles.logoText}>TaxRide</Text>
         </View>
-        {/* <ButtonC
-              textContent="Login"
-              buttonStyle={styles.loginButton}
-              textStyle={styles.loginText}
-            /> */}
         {/* <Link href="/LoginScreen" asChild> */}
         <ButtonC
           textContent="Login"
@@ -51,13 +46,6 @@ export default function WelcomeScreen() {
           textStyle={styles.SignUpText}
           navigateToPath="/SignUpScreen"
         />
-
-        {/* <View style={[styles.button, styles.loginButton]}>
-            <Text style={[styles.text, styles.loginText]}>Login</Text>
-          </View>
-          <View style={[styles.button, styles.signUpButton]}>
-            <Text style={[styles.text, styles.SignUpText]}>Sign Up</Text>
-          </View> */}
       </View>
     </SafeAreaView>
   );
@@ -65,7 +53,7 @@ export default function WelcomeScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    // marginTop: StatusBar.currentHeight,
+    // paddingTop: StatusBar.currentHeight,
   },
   topContainer: {
     height: "45%",

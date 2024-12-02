@@ -4,47 +4,11 @@ import {
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
 import Icon from "react-native-vector-icons/Ionicons";
-import * as FileSystem from "expo-file-system";
-import * as Sharing from "expo-sharing";
-
-const openFile = async (filePath) => {
-  const fileInfo = await FileSystem.getInfoAsync(filePath);
-  if (fileInfo.exists) {
-    console.log("File exists and is ready to open:", filePath);
-  } else {
-    console.error("File does not exist:", filePath);
-  }
-
-  // try {
-  //   await FileSystem.openDocumentAsync(filePath);
-  // } catch (error) {
-  //   console.error("Error opening file:", error);
-  // }
-
-  if (!(await Sharing.isAvailableAsync())) {
-    alert("Sharing is not available on this device");
-    return;
-  }
-
-  try {
-    await Sharing.shareAsync(filePath);
-  } catch (error) {
-    console.error("Error opening file:", error);
-  }
-};
 
 export default function FileC({ fileName, fileDate, fileSize }) {
   return (
     <View>
-      <View
-        // onPress={
-        //   () => console.log("press image")
-        //   // openFile(
-        //   //   "file:///data/user/0/host.exp.exponent/files/my-image-1732948927699.png"
-        //   // )
-        // }
-        style={styles.rowContainer}
-      >
+      <View style={styles.rowContainer}>
         <View>
           <View style={styles.rowStyle}>
             <Icon name="document" size={wp(9)} />

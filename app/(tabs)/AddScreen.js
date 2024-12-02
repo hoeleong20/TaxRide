@@ -1,4 +1,4 @@
-import { Text, View, StyleSheet, Pressable } from "react-native";
+import { Text, View, StyleSheet, Pressable, SafeAreaView } from "react-native";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -8,7 +8,7 @@ const logoImg = require("../../assets/adaptive-icon.png");
 
 export default function AddScreen() {
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Text>Add File</Text>
 
       <View>
@@ -22,7 +22,7 @@ export default function AddScreen() {
           <Text>Cancel</Text>
         </Pressable>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 

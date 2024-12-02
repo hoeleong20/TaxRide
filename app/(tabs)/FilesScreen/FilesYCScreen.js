@@ -1,11 +1,9 @@
 import {
-  Text,
   View,
   StyleSheet,
-  useWindowDimensions,
-  Image,
-  TextInput,
   Pressable,
+  SafeAreaView,
+  StatusBar,
 } from "react-native";
 import { useState } from "react";
 import {
@@ -14,116 +12,58 @@ import {
 } from "react-native-responsive-screen";
 import FileC from "../../../components/FileC";
 import FileScreenTitleC from "../../../components/FileScreenTitleC";
-import ImageViewer from "react-native-image-zoom-viewer";
-import { Modal } from "react-native";
+import ImagePreviewC from "../../../components/ImagePreviewC";
 
 const logoImg = require("../../../assets/adaptive-icon.png");
 
 export default function FilesYCScreen() {
   const [modalVisible, setModalVisible] = useState(false);
+  const [imageName, setImageName] = useState("");
 
-  const images = [
-    {
-      // For local images, pass an empty URL and use the `props` key
-      url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQjSKoyOjhKTNOkbuXv8zhtxMwtpt39UaMmLA&s",
-    },
-    {
-      // For local images, pass an empty URL and use the `props` key
-      url: "",
-      props: {
-        source: require("../../../assets/cat.jpg"),
-      },
-    },
-    {
-      // For local images, pass an empty URL and use the `props` key
-      url: "",
-      props: {
-        source: require("../../../assets/cat2.jpg"),
-      },
-    },
-  ];
+  const imageUri =
+    "https://static.vecteezy.com/system/resources/previews/033/540/048/non_2x/two-funny-cats-take-a-selfie-on-the-beach-humor-created-using-artificial-intelligence-free-photo.jpg";
+  // "https://plus.unsplash.com/premium_photo-1677545183884-421157b2da02?fm=jpg&q=60&w=3000&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8ZnVubnklMjBjYXR8ZW58MHx8MHx8fDA%3D";
+
+  const openFile = (imageName) => {
+    setModalVisible(true);
+    setImageName(imageName);
+  };
 
   return (
-    <View style={styles.container}>
-      <FileScreenTitleC screenTitleText={"Lifestyle"} />
-      <View>
-        <Pressable onPress={() => setModalVisible(true)}>
-          <FileC fileName={"Invoice"} fileDate={"25 Oct 2023"} fileSize={2.4} />
-        </Pressable>
-        <Pressable onPress={() => setModalVisible(true)}>
-          <FileC fileName={"Invoice"} fileDate={"25 Oct 2023"} fileSize={2.4} />
-        </Pressable>
+    <SafeAreaView>
+      <View style={styles.container}>
+        <FileScreenTitleC screenTitleText={"Lifestyle"} />
+        <View>
+          <Pressable onPress={() => openFile("Invoice")}>
+            <FileC
+              fileName={"Invoice"}
+              fileDate={"25 Oct 2023"}
+              fileSize={2.4}
+            />
+          </Pressable>
+          <Pressable onPress={() => openFile("Picture")}>
+            <FileC
+              fileName={"Picture"}
+              fileDate={"25 Oct 2023"}
+              fileSize={2.4}
+            />
+          </Pressable>
+        </View>
       </View>
 
-      <Modal visible={modalVisible} transparent={true}>
-        <View style={styles.modalBackground}>
-          <ImageViewer
-            imageUrls={images}
-            enableSwipeDown={true}
-            onSwipeDown={() => setModalVisible(false)} // Close on swipe down
-          />
-        </View>
-      </Modal>
-    </View>
+      <ImagePreviewC
+        modalVisible={modalVisible}
+        setModalVisible={setModalVisible}
+        imageUri={imageUri}
+        imageName={imageName}
+      />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: wp(7),
-    paddingTop: hp(7),
-  },
-  modalBackground: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0,1)", // Semi-transparent black background
-    justifyContent: "center",
-  },
-  screenTitle: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: hp(3),
-  },
-  screenTitleText: {
-    fontSize: wp(6),
-    marginLeft: wp(4),
-  },
-  logoContainer: {
-    alignItems: "center",
-  },
-  logoImgStyle: {
-    width: hp(30),
-    height: hp(30),
-    margin: hp(2),
-  },
-  titleText: {
-    fontSize: hp(3),
-    fontWeight: "700",
-    textAlign: "center",
-    marginBottom: hp(3),
-  },
-  descText: {
-    textAlign: "center",
-    marginTop: hp(2),
-    marginBottom: hp(4),
-    color: "#8391A1",
-  },
-  loginButton: {
-    backgroundColor: "#3E33D9",
-    borderColor: "#3E33D9",
-    marginBottom: hp(2),
-  },
-  loginText: {
-    color: "white",
-  },
-  altContainer: {
-    flexDirection: "row",
-    marginHorizontal: "auto",
-  },
-  altText1: {
-    marginRight: wp(2),
-  },
-  altText2: {
-    color: "#3E33D9",
-    fontWeight: "600",
+    paddingTop: StatusBar.currentHeight,
   },
 });

@@ -25,7 +25,6 @@ export default function ForgotPasswordScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar />
       <BackButtonC border={true} />
       <View style={styles.logoContainer}>
         <Image source={logoImg} style={styles.logoImgStyle} />
@@ -41,8 +40,8 @@ export default function ForgotPasswordScreen() {
       </Text>
       <ButtonC
         textContent="Send Email"
-        buttonStyle={styles.loginButton}
-        textStyle={styles.loginText}
+        buttonStyle={styles.sendEmailButton}
+        textStyle={styles.sendEmailText}
       />
     </SafeAreaView>
   );
@@ -51,7 +50,7 @@ export default function ForgotPasswordScreen() {
 const styles = StyleSheet.create({
   container: {
     marginHorizontal: wp(7),
-    // paddingTop: StatusBar.currentHeight,
+    paddingTop: StatusBar.currentHeight,
   },
   logoContainer: {
     alignItems: "center",
@@ -73,23 +72,12 @@ const styles = StyleSheet.create({
     marginBottom: hp(4),
     color: "#8391A1",
   },
-  loginButton: {
+  sendEmailButton: {
     backgroundColor: "#3E33D9",
     borderColor: "#3E33D9",
     marginBottom: hp(2),
   },
-  loginText: {
+  sendEmailText: {
     color: "white",
-  },
-  altContainer: {
-    flexDirection: "row",
-    marginHorizontal: "auto",
-  },
-  altText1: {
-    marginRight: wp(2),
-  },
-  altText2: {
-    color: "#3E33D9",
-    fontWeight: "600",
   },
 });

@@ -26,7 +26,6 @@ export default function SignUpScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar />
       <BackButtonC border={true} />
       <View style={styles.logoContainer}>
         <Image source={logoImg} style={styles.logoImgStyle} />
@@ -70,7 +69,7 @@ export default function SignUpScreen() {
 const styles = StyleSheet.create({
   container: {
     marginHorizontal: wp(7),
-    // paddingTop: StatusBar.currentHeight,
+    paddingTop: StatusBar.currentHeight,
   },
   logoContainer: {
     alignItems: "center",

@@ -17,6 +17,7 @@ import NotificationButtonC from "../../components/NotificationButtonC";
 import StorageUsageBarC from "../../components/StorageUsageBarC";
 import Icon from "react-native-vector-icons/Ionicons";
 import FileC from "../../components/FileC";
+import ImagePreviewC from "../../components/ImagePreviewC";
 
 const profileImage = require("../../assets/adaptive-icon.png");
 
@@ -24,10 +25,21 @@ export default function HomeScreen() {
   const [name, setName] = useState("Ayush Srivastava");
   const [cloudStoragePerc, setCloudStoragePerc] = useState(37);
   const [internalStoragePerc, setInternalStoragePerc] = useState(66);
+  const [imageName, setImageName] = useState("");
+
+  const [modalVisible, setModalVisible] = useState(false);
+
+  const imageUri =
+    // "https://static.vecteezy.com/system/resources/previews/033/540/048/non_2x/two-funny-cats-take-a-selfie-on-the-beach-humor-created-using-artificial-intelligence-free-photo.jpg";
+    "https://plus.unsplash.com/premium_photo-1677545183884-421157b2da02?fm=jpg&q=60&w=3000&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8ZnVubnklMjBjYXR8ZW58MHx8MHx8fDA%3D";
+
+  const openFile = (imageName) => {
+    setModalVisible(true);
+    setImageName(imageName);
+  };
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar />
       <ScrollView style={styles.innerContainer}>
         <View style={styles.topBar}>
           <View style={styles.profileContainer}>
@@ -69,18 +81,28 @@ export default function HomeScreen() {
             </View>
           </View>
           <View>
-            <FileC
-              fileName={"Invoice"}
-              fileDate={"25 Oct 2023"}
-              fileSize={2.4}
-            />
-            <FileC
-              fileName={"Camera Images"}
-              fileDate={"19 Oct 2023"}
-              fileSize={34}
-            />
+            <Pressable onPress={() => openFile("Invoice")}>
+              <FileC
+                fileName={"Invoice"}
+                fileDate={"25 Oct 2023"}
+                fileSize={2.4}
+              />
+            </Pressable>
+            <Pressable onPress={() => openFile("Camera Images")}>
+              <FileC
+                fileName={"Camera Images"}
+                fileDate={"19 Oct 2023"}
+                fileSize={34}
+              />
+            </Pressable>
           </View>
         </View>
+        <ImagePreviewC
+          modalVisible={modalVisible}
+          setModalVisible={setModalVisible}
+          imageUri={imageUri}
+          imageName={imageName}
+        />
       </ScrollView>
     </SafeAreaView>
   );
@@ -88,11 +110,11 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    // paddingTop: StatusBar.currentHeight,
     flex: 1,
     backgroundColor: "#FBFBFB",
   },
   innerContainer: {
+    paddingTop: StatusBar.currentHeight,
     paddingHorizontal: wp(4),
   },
   topBar: {
@@ -105,7 +127,7 @@ const styles = StyleSheet.create({
   profileImageStyle: {
     width: hp(10),
     height: hp(10),
-    margin: hp(2),
+    marginBottom: hp(2),
   },
   profileTextContainer: {
     flexDirection: "column",
@@ -168,19 +190,5 @@ const styles = StyleSheet.create({
     color: "#0066FF",
     fontWeight: "600",
     marginRight: wp(2),
-  },
-  addIconButton: {
-    position: "absolute",
-    zIndex: 3,
-    left: wp(40),
-    top: hp(80),
-    width: wp(20),
-    height: wp(20),
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: wp(10),
-    borderColor: "#C3E8FA",
-    borderWidth: wp(2),
-    backgroundColor: "#9068FF",
   },
 });

@@ -1,12 +1,4 @@
-import {
-  Text,
-  View,
-  StyleSheet,
-  useWindowDimensions,
-  Image,
-  TextInput,
-} from "react-native";
-import { useState } from "react";
+import { Text, View, StyleSheet, StatusBar, SafeAreaView } from "react-native";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -15,81 +7,32 @@ import FileScreenTitleC from "../../../components/FileScreenTitleC";
 import FolderC from "../../../components/FolderC";
 
 export default function FilesYScreen() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-
   return (
-    <View style={styles.container}>
-      <FileScreenTitleC screenTitleText={"2023"} />
-      <View>
-        <FolderC
-          folderName={"Education"}
-          navigateToPath="/(tabs)/FilesScreen/FilesYCScreen"
-        />
-        <FolderC
-          folderName={"Medical"}
-          navigateToPath="/(tabs)/FilesScreen/FilesYCScreen"
-        />
-        <FolderC
-          folderName={"Lifestyle"}
-          navigateToPath="/(tabs)/FilesScreen/FilesYCScreen"
-        />
+    <SafeAreaView>
+      <View style={styles.container}>
+        <FileScreenTitleC screenTitleText={"2023"} />
+        <View>
+          <FolderC
+            folderName={"Education"}
+            navigateToPath="/(tabs)/FilesScreen/FilesYCScreen"
+          />
+          <FolderC
+            folderName={"Medical"}
+            navigateToPath="/(tabs)/FilesScreen/FilesYCScreen"
+          />
+          <FolderC
+            folderName={"Lifestyle"}
+            navigateToPath="/(tabs)/FilesScreen/FilesYCScreen"
+          />
+        </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    paddingTop: hp(7),
+    paddingTop: StatusBar.currentHeight,
     paddingHorizontal: wp(7),
-  },
-  screenTitle: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: hp(3),
-  },
-  screenTitleText: {
-    fontSize: wp(6),
-    marginLeft: wp(4),
-  },
-  logoContainer: {
-    alignItems: "center",
-  },
-  logoImgStyle: {
-    width: hp(30),
-    height: hp(30),
-    margin: hp(2),
-  },
-  titleText: {
-    fontSize: hp(3),
-    fontWeight: "700",
-    textAlign: "center",
-    marginBottom: hp(3),
-  },
-  descText: {
-    textAlign: "center",
-    marginTop: hp(2),
-    marginBottom: hp(4),
-    color: "#8391A1",
-  },
-  loginButton: {
-    backgroundColor: "#3E33D9",
-    borderColor: "#3E33D9",
-    marginBottom: hp(2),
-  },
-  loginText: {
-    color: "white",
-  },
-  altContainer: {
-    flexDirection: "row",
-    marginHorizontal: "auto",
-  },
-  altText1: {
-    marginRight: wp(2),
-  },
-  altText2: {
-    color: "#3E33D9",
-    fontWeight: "600",
   },
 });
