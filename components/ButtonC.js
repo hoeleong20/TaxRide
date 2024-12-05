@@ -9,16 +9,12 @@ export default function ButtonC({
   textContent,
   buttonStyle,
   textStyle,
-  navigateToPath,
+  onPress
 }) {
   return (
-    // <Link href={navigateToPath} style={[styles.button, buttonStyle]}>
-    //   <Text style={[styles.text, textStyle]}>{textContent}</Text>
-    // </Link>
-
     <Pressable
-      onPress={() => router.push(navigateToPath)}
       style={[styles.button, buttonStyle]}
+      onPress={onPress}
     >
       <Text style={[styles.text, textStyle]}>{textContent}</Text>
     </Pressable>

@@ -7,6 +7,7 @@ import {
   TextInput,
   StatusBar,
   SafeAreaView,
+  Alert,
 } from "react-native";
 import { useState } from "react";
 import {
@@ -18,10 +19,48 @@ import TextInputC from "../components/TextInputC";
 import BackButtonC from "../components/BackButtonC";
 
 const logoImg = require("../assets/adaptive-icon.png");
+const BASE_URL = "http://192.168.1.39:3000";
 
 export default function ForgotPasswordScreen() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
+
+  const handleForgotPassword = async () => {
+    console.log("1");
+
+    try {
+      const response = await fetch(`${BASE_URL}/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      console.log("2");
+
+      const rawResponse = await response.text();
+      console.log("Raw Response:", rawResponse);
+
+      let data;
+      try {
+        data = JSON.parse(rawResponse);
+      } catch (parseError) {
+        console.error("Error parsing JSON:", parseError);
+        Alert.alert("Error", "Unexpected response from server.");
+        return;
+      }
+
+      if (response.ok) {
+        console.log("3 - Password sent");
+        Alert.alert("Success", `Your password is: ${data.password}`);
+      } else {
+        console.log("4 - Email not found");
+        Alert.alert("Error", data.message || "Email not found");
+      }
+    } catch (error) {
+      console.error("Error in fetch:", error);
+      Alert.alert("Error", "Something went wrong. Please try again later.");
+    } finally {
+      console.log("5 - Finished execution of handleForgotPassword.");
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -32,8 +71,8 @@ export default function ForgotPasswordScreen() {
       <Text style={styles.titleText}>Restore Password</Text>
       <TextInputC
         placeholderText={"Enter your email"}
-        value={username}
-        onChangeText={setUsername}
+        value={email}
+        onChangeText={setEmail}
       />
       <Text style={styles.descText}>
         You will receive email with password reset link
@@ -42,6 +81,7 @@ export default function ForgotPasswordScreen() {
         textContent="Send Email"
         buttonStyle={styles.sendEmailButton}
         textStyle={styles.sendEmailText}
+        onPress={handleForgotPassword}
       />
     </SafeAreaView>
   );

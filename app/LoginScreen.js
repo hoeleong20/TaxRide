@@ -5,6 +5,7 @@ import {
   Image,
   StatusBar,
   SafeAreaView,
+  Alert,
 } from "react-native";
 import { useState } from "react";
 import {
@@ -14,13 +15,54 @@ import {
 import ButtonC from "../components/ButtonC";
 import TextInputC from "../components/TextInputC";
 import BackButtonC from "../components/BackButtonC";
-import { Link } from "expo-router";
+import { Link, router } from "expo-router";
+
+const BASE_URL = "http://192.168.1.39:3000";
 
 const logoImg = require("../assets/adaptive-icon.png");
 
 export default function LoginScreen() {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const handleLogin = async () => {
+    console.log("1");
+
+    try {
+      const response = await fetch(`${BASE_URL}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      console.log("2");
+
+      const rawResponse = await response.text();
+      console.log("Raw Response:", rawResponse);
+
+      let data;
+      try {
+        data = JSON.parse(rawResponse);
+      } catch (parseError) {
+        console.error("Error parsing JSON:", parseError);
+        Alert.alert("Error", "Unexpected response from server.");
+        return;
+      }
+
+      if (response.ok) {
+        console.log("3 - Login successful");
+        Alert.alert("Success", "Login successful!");
+        router.push("/HomeScreen");
+      } else {
+        console.log("4 - Login failed");
+        Alert.alert("Error", data.message || "Login failed");
+      }
+    } catch (error) {
+      console.error("Error in fetch:", error);
+      Alert.alert("Error", "Something went wrong. Please try again later.");
+    } finally {
+      console.log("5 - Finished execution of handleLogin.");
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -31,8 +73,8 @@ export default function LoginScreen() {
       <Text style={styles.titleText}>Welcome Back</Text>
       <TextInputC
         placeholderText={"Enter your email"}
-        value={username}
-        onChangeText={setUsername}
+        value={email}
+        onChangeText={setEmail}
       />
       <TextInputC
         placeholderText={"Enter your password"}
@@ -46,7 +88,7 @@ export default function LoginScreen() {
         textContent="Login"
         buttonStyle={styles.loginButton}
         textStyle={styles.loginText}
-        navigateToPath="/HomeScreen"
+        onPress={handleLogin}
       />
       <View style={styles.altContainer}>
         <Text style={styles.altText1}>Don't have an account?</Text>

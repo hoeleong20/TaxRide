@@ -14,7 +14,7 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
-import { Link } from "expo-router";
+import { Link, router } from "expo-router";
 import ButtonC from "../components/ButtonC";
 
 const logoImg = require("../assets/adaptive-icon.png");
@@ -34,7 +34,7 @@ export default function WelcomeScreen() {
           textContent="Login"
           buttonStyle={styles.loginButton}
           textStyle={styles.loginText}
-          navigateToPath="/LoginScreen"
+          onPress={() => router.push("/LoginScreen")}
         />
         {/* <Pressable style={styles.loginButton}>
               <Text style={styles.loginText}>Login</Text>
@@ -44,7 +44,7 @@ export default function WelcomeScreen() {
           textContent="Sign Up"
           buttonStyle={styles.signUpButton}
           textStyle={styles.SignUpText}
-          navigateToPath="/SignUpScreen"
+          onPress={() => router.push("/SignUpScreen")}
         />
       </View>
     </SafeAreaView>
