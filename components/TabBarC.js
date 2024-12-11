@@ -19,6 +19,7 @@ import * as Linking from "expo-linking";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 // import Parse from "parse/react-native.js";
 import * as FileSystem from "expo-file-system";
+import axios from "axios";
 
 export default function TabBarC({ state, descriptors, navigation }) {
   const icons = {
@@ -143,6 +144,7 @@ export default function TabBarC({ state, descriptors, navigation }) {
 
       if (!result.canceled) {
         setImage(result.assets[0].uri);
+        uploadImage();
       }
     } catch (error) {
       alert("error : " + error.message);
@@ -165,34 +167,35 @@ export default function TabBarC({ state, descriptors, navigation }) {
 
       if (!result.canceled) {
         setImage(result.assets[0].uri);
+        uploadImage();
       }
     } catch (error) {
       alert("error : " + error.message);
     }
   };
 
-  // async function saveFile() {
-  //   console.log("run save file");
+  async function saveFile() {
+    console.log("run save file");
 
-  //   // 1. Create a file
-  //   const { base64, fileName } = image;
-  //   const parseFile = new Parse.File(fileName, { base64 });
+    // 1. Create a file
+    const { base64, fileName } = image;
+    const parseFile = new Parse.File(fileName, { base64 });
 
-  //   // 2. Save the file
-  //   try {
-  //     const responseFile = await parseFile.save();
-  //     const Gallery = Parse.Object.extend("Gallery");
-  //     const gallery = new Gallery();
-  //     gallery.set("picture", responseFile);
+    // 2. Save the file
+    try {
+      const responseFile = await parseFile.save();
+      const Gallery = Parse.Object.extend("Gallery");
+      const gallery = new Gallery();
+      gallery.set("picture", responseFile);
 
-  //     await gallery.save();
-  //     Alert.alert("The file has been saved to Back4app.");
-  //   } catch (error) {
-  //     console.log(
-  //       "The file either could not be read, or could not be saved to Back4app."
-  //     );
-  //   }
-  // }
+      await gallery.save();
+      Alert.alert("The file has been saved to Back4app.");
+    } catch (error) {
+      console.log(
+        "The file either could not be read, or could not be saved to Back4app."
+      );
+    }
+  }
 
   const saveImage = async (imageUri) => {
     if (!imageUri) {
@@ -211,6 +214,106 @@ export default function TabBarC({ state, descriptors, navigation }) {
       console.log("Image saved to:", destinationPath);
     } catch (error) {
       console.error("Error saving image:", error);
+    }
+  };
+
+  // const handleLaunchCamera = async () => {
+  //   try {
+  //     const result = await ImagePicker.launchCameraAsync();
+  //     if (!result.canceled) {
+  //       await uploadToGoogleDrive(result.assets[0].uri);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error launching camera:", error);
+  //     Alert.alert("Error", "Failed to launch camera.");
+  //   }
+  // };
+
+  // const handleLaunchImageLibrary = async () => {
+  //   try {
+  //     const result = await ImagePicker.launchImageLibraryAsync();
+  //     if (!result.canceled) {
+  //       await uploadToGoogleDrive(result.assets[0].uri);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error launching image library:", error);
+  //     Alert.alert("Error", "Failed to open image library.");
+  //   }
+  // };
+
+  // const uploadToGoogleDrive = async (fileUri) => {
+  //   try {
+  //     const tokens = await AsyncStorage.getItem("googleDriveTokens");
+
+  //     if (!tokens) {
+  //       Alert.alert("Error", "Please connect to Google Drive first.");
+  //       return;
+  //     }
+
+  //     const fileName = `my-image-${Date.now()}.png`;
+  //     const fileType = "image/png";
+  //     const fileBuffer = await FileSystem.readAsStringAsync(fileUri, {
+  //       encoding: FileSystem.EncodingType.Base64,
+  //     });
+
+  //     const formData = new FormData();
+  //     formData.append("file", {
+  //       uri: fileUri,
+  //       name: fileName,
+  //       type: fileType,
+  //     });
+  //     formData.append("token", tokens);
+
+  //     const response = await fetch(`${BASE_URL}/google/upload`, {
+  //       method: "POST",
+  //       body: formData,
+  //       headers: {
+  //         "Content-Type": "multipart/form-data",
+  //       },
+  //     });
+
+  //     if (response.ok) {
+  //       Alert.alert("Success", "File uploaded to Google Drive!");
+  //     } else {
+  //       const error = await response.text();
+  //       Alert.alert("Error", `File upload failed: ${error}`);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error uploading file:", error);
+  //     Alert.alert("Error", "Failed to upload file. Please try again.");
+  //   }
+  // };
+
+  const uploadImage = async () => {
+    console.log("13");
+    if (!image) return;
+    console.log("14");
+
+    const formData = new FormData();
+    formData.append("file", {
+      uri: image,
+      name: "image1.jpg",
+      type: "image/jpeg",
+    });
+    console.log("15");
+
+    try {
+      const response = await axios.post(
+        "http://192.168.1.39:3000/upload",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      alert(`File uploaded successfully. File ID: ${response.data.fileId}`);
+    } catch (error) {
+      alert(`Upload failed: ${error.message}`);
+      console.error(
+        "Upload Error Details:",
+        error.response?.data || error.message
+      );
     }
   };
 

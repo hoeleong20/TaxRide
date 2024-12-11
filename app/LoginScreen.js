@@ -22,8 +22,8 @@ const BASE_URL = "http://192.168.1.39:3000";
 const logoImg = require("../assets/adaptive-icon.png");
 
 export default function LoginScreen() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("hoeleongjob01@gmail.com");
+  const [password, setPassword] = useState("pass1234.");
 
   const handleLogin = async () => {
     console.log("1");

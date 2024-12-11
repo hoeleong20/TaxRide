@@ -7,8 +7,9 @@ import {
   SafeAreaView,
   Pressable,
   ScrollView,
+  Alert,
 } from "react-native";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -18,8 +19,13 @@ import StorageUsageBarC from "../../components/StorageUsageBarC";
 import Icon from "react-native-vector-icons/Ionicons";
 import FileC from "../../components/FileC";
 import ImagePreviewC from "../../components/ImagePreviewC";
+import ButtonC from "../../components/ButtonC";
+import * as Linking from "expo-linking";
+import * as AuthSession from "expo-auth-session";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const profileImage = require("../../assets/adaptive-icon.png");
+const BASE_URL = "http://192.168.1.39:3000";
 
 export default function HomeScreen() {
   const [name, setName] = useState("Ayush Srivastava");
@@ -37,6 +43,124 @@ export default function HomeScreen() {
     setModalVisible(true);
     setImageName(imageName);
   };
+
+  // const handleGoogleAuth = async () => {
+  //   try {
+  //     // Step 1: Fetch the Google Auth URL from the backend
+  //     const response = await fetch(`${BASE_URL}/google/auth-url`);
+  //     const { authUrl } = await response.json();
+  //     console.log(authUrl);
+
+  //     // Step 2: Open the authUrl in a browser
+  //     const redirectResult = await Linking.openURL(authUrl);
+  //     console.log(redirectResult);
+  //     console.log(redirectResult.url);
+
+  //     // Step 3: Handle callback and get tokens
+  //     if (redirectResult && redirectResult.url) {
+  //       console.log("1");
+
+  //       const code = new URLSearchParams(
+  //         new URL(redirectResult.url).search
+  //       ).get("code");
+
+  //       console.log("2");
+
+  //       const tokenResponse = await fetch(`${BASE_URL}/google/auth-callback`, {
+  //         method: "POST",
+  //         headers: { "Content-Type": "application/json" },
+  //         body: JSON.stringify({ code }),
+  //       });
+
+  //       console.log("3");
+
+  //       const tokens = await tokenResponse.json();
+
+  //       if (tokenResponse.ok) {
+  //         Alert.alert("Success", "Google Drive connected successfully!");
+  //         // Save tokens for later use
+  //         await AsyncStorage.setItem(
+  //           "googleDriveTokens",
+  //           JSON.stringify(tokens)
+  //         );
+  //       } else {
+  //         Alert.alert(
+  //           "Error",
+  //           tokens.message || "Failed to connect to Google Drive."
+  //         );
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.error("Error in Google Auth flow:", error);
+  //     Alert.alert(
+  //       "Error",
+  //       "Something went wrong during Google authentication."
+  //     );
+  //   }
+  // };
+
+  //------------------------------
+  // const [request, response, promptAsync] = AuthSession.useAuthRequest({
+  //   clientId:
+  //     "18690988914-qjcdpeupo15gn8jnk3tljor95aoml7lg.apps.googleusercontent.com",
+  //   redirectUri: AuthSession.makeRedirectUri({ useProxy: true }),
+  //   scopes: ["profile", "email"],
+  //   responseType: AuthSession.ResponseType.Code,
+  // });
+
+  // useEffect(() => {
+  //   if (response?.type === "success") {
+  //     const { code } = response.params;
+  //     console.log("Authentication successful, code:", code);
+
+  //     // Exchange the authorization code for tokens
+  //     (async () => {
+  //       try {
+  //         const tokenResponse = await fetch(
+  //           `${BASE_URL}/google/auth-callback`,
+  //           {
+  //             method: "POST",
+  //             headers: { "Content-Type": "application/json" },
+  //             body: JSON.stringify({ code }),
+  //           }
+  //         );
+
+  //         if (tokenResponse.ok) {
+  //           const tokens = await tokenResponse.json();
+  //           Alert.alert("Success", "Google Drive connected successfully!");
+  //           await AsyncStorage.setItem(
+  //             "googleDriveTokens",
+  //             JSON.stringify(tokens)
+  //           );
+  //         } else {
+  //           const errorData = await tokenResponse.json();
+  //           Alert.alert(
+  //             "Error",
+  //             errorData.message || "Failed to connect to Google Drive."
+  //           );
+  //         }
+  //       } catch (error) {
+  //         console.error("Error during token exchange:", error);
+  //         Alert.alert("Error", "Something went wrong.");
+  //       }
+  //     })();
+  //   }
+  // }, [response]);
+
+  // const handleGoogleAuth = async () => {
+  //   console.log("Triggering Google authentication...");
+  //   console.log("Auth request:", request);
+  //   console.log(
+  //     "Redirect URI:",
+  //     AuthSession.makeRedirectUri({ useProxy: true })
+  //   );
+
+  //   if (request) {
+  //     await promptAsync();
+  //   } else {
+  //     Alert.alert("Error", "Authentication request could not be created.");
+  //   }
+  // };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -104,6 +228,12 @@ export default function HomeScreen() {
           imageName={imageName}
         />
       </ScrollView>
+      {/* <ButtonC
+        textContent="Login with Google"
+        buttonStyle={styles.googleLoginButton}
+        textStyle={styles.googleLoginText}
+        onPress={handleGoogleAuth}
+      /> */}
     </SafeAreaView>
   );
 }
