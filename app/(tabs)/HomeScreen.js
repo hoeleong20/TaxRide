@@ -24,7 +24,7 @@ import * as Linking from "expo-linking";
 import * as AuthSession from "expo-auth-session";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const profileImage = require("../../assets/adaptive-icon.png");
+const profileImage = require("../../assets/userProfile.jpg");
 const BASE_URL = "http://192.168.1.39:3000";
 
 export default function HomeScreen() {
@@ -255,13 +255,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
   profileImageStyle: {
-    width: hp(10),
-    height: hp(10),
+    width: wp(18),
+    height: hp(8),
     marginBottom: hp(2),
   },
   profileTextContainer: {
     flexDirection: "column",
     justifyContent: "center",
+    marginLeft: wp(5),
   },
   profileText1: {
     fontSize: hp(2),

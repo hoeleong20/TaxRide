@@ -20,6 +20,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 // import Parse from "parse/react-native.js";
 import * as FileSystem from "expo-file-system";
 import axios from "axios";
+import Dialog from "react-native-dialog";
+
+const BASE_URL = "http://192.168.1.39:3000";
 
 export default function TabBarC({ state, descriptors, navigation }) {
   const icons = {
@@ -97,19 +100,19 @@ export default function TabBarC({ state, descriptors, navigation }) {
   }, [cameraStatus, handleLaunchCamera, requestCameraPermission]);
 
   const handleGalleryPermission = useCallback(async () => {
-    if (cameraStatus) {
+    if (galleryStatus) {
       if (
-        cameraStatus.status === ImagePicker.PermissionStatus.UNDETERMINED ||
-        (cameraStatus.status === ImagePicker.PermissionStatus.DENIED &&
-          cameraStatus.canAskAgain)
+        galleryStatus.status === ImagePicker.PermissionStatus.UNDETERMINED ||
+        (galleryStatus.status === ImagePicker.PermissionStatus.DENIED &&
+          galleryStatus.canAskAgain)
       ) {
-        const permission = await requestCameraPermission();
+        const permission = await requestGalleryPermission();
         if (permission.granted) {
           await handleLaunchImageLibrary();
         }
-      } else if (cameraStatus.status === ImagePicker.PermissionStatus.DENIED) {
+      } else if (galleryStatus.status === ImagePicker.PermissionStatus.DENIED) {
         console.log("2");
-        const permission = await requestCameraPermission();
+        const permission = await requestGalleryPermission();
         if (permission.granted) {
           console.log("3");
           await handleLaunchImageLibrary();
@@ -122,6 +125,10 @@ export default function TabBarC({ state, descriptors, navigation }) {
   }, [galleryStatus, handleLaunchImageLibrary, requestGalleryPermission]);
 
   const [image, setImage] = useState("");
+  const [dialogVisible, setDialogVisible] = useState(false);
+  const [year, setYear] = useState("");
+  const [category, setCategory] = useState("");
+  const [filename, setFilename] = useState("");
 
   const handleLaunchCamera = useCallback(async () => {
     console.log("1");
@@ -135,44 +142,87 @@ export default function TabBarC({ state, descriptors, navigation }) {
       });
       console.log("2");
       // saveFile();
-      console.log(result.assets[0]?.uri);
-      saveImage(result.assets[0]?.uri);
 
       // AsyncStorage.setItem("savedImage", JSON.stringify(result));
       // const jsonValue = await AsyncStorage.getItem("savedImage");
       // console.log(JSON.parse(jsonValue));
 
       if (!result.canceled) {
+        console.log(result.assets[0]?.uri);
+        saveImage(result.assets[0]?.uri);
         setImage(result.assets[0].uri);
-        uploadImage();
+        setDialogVisible(true); // Show dialog after selecting image
       }
     } catch (error) {
       alert("error : " + error.message);
     }
   }, []);
 
+  // const handleLaunchImageLibrary = async () => {
+  //   console.log("1");
+  //   try {
+  //     // No permissions request is necessary for launching the image library
+  //     let result = await ImagePicker.launchImageLibraryAsync({
+  //       // mediaTypes: ["images", "videos"],
+  //       // allowsEditing: true,
+  //       // aspect: [4, 3],
+  //       // quality: 1,
+  //     });
+  //     console.log("2");
+
+  //     if (!result.canceled) {
+  //       console.log(result.assets[0]?.uri);
+  //       saveImage(result.assets[0]?.uri);
+  //       setImage(result.assets[0].uri);
+  //       console.log("Set image state with:", result.assets[0]?.uri);
+
+  //       setDialogVisible(true); // Show dialog after selecting image
+  //     }
+  //   } catch (error) {
+  //     alert("error : " + error.message);
+  //   }
+  // };
+
   const handleLaunchImageLibrary = async () => {
-    console.log("1");
+    console.log("Choose From Library selected");
     try {
-      // No permissions request is necessary for launching the image library
-      let result = await ImagePicker.launchImageLibraryAsync({
-        // mediaTypes: ["images", "videos"],
-        // allowsEditing: true,
-        // aspect: [4, 3],
-        // quality: 1,
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 1,
       });
-      console.log("2");
-      console.log(result.assets[0]?.uri);
-      saveImage(result.assets[0]?.uri);
+
+      console.log("ImagePicker result:", result);
 
       if (!result.canceled) {
-        setImage(result.assets[0].uri);
-        uploadImage();
+        const uri = result.assets[0]?.uri;
+        console.log("Selected image URI:", uri);
+
+        saveImage(uri);
+        setImage(uri); // Update state
+        setDialogVisible(true); // Show dialog
       }
     } catch (error) {
-      alert("error : " + error.message);
+      console.error("Error in handleLaunchImageLibrary:", error);
+      alert(`Error: ${error.message}`);
     }
   };
+
+  // useEffect(() => {
+  //   console.log("Image changed:", image);
+  //   if (image) {
+  //     console.log("Dialog visibility set to true");
+  //     uploadImage();
+  //     // setDialogVisible(true);
+  //   }
+  // }, [image]);
+
+  useEffect(() => {
+    console.log("Updated image state:", image);
+  }, [image]);
+
+  useEffect(() => {
+    console.log("Dialog visibility changed:", dialogVisible);
+  }, [dialogVisible]);
 
   async function saveFile() {
     console.log("run save file");
@@ -284,38 +334,92 @@ export default function TabBarC({ state, descriptors, navigation }) {
   //   }
   // };
 
-  const uploadImage = async () => {
-    console.log("13");
-    if (!image) return;
-    console.log("14");
+  // const uploadImage = async () => {
+  //   console.log("13");
+  //   if (!image) return;
+  //   console.log("14");
 
-    const formData = new FormData();
-    formData.append("file", {
-      uri: image,
-      name: "image1.jpg",
-      type: "image/jpeg",
-    });
-    console.log("15");
+  //   const formData = new FormData();
+  //   formData.append("file", {
+  //     uri: image,
+  //     name: `${year}-${category}-${filename}.jpg`,
+  //     type: "image/jpeg",
+  //   });
+  //   console.log("15");
 
+  //   try {
+  //     const response = await axios.post(`${BASE_URL}/upload`, formData, {
+  //       headers: {
+  //         "Content-Type": "multipart/form-data",
+  //       },
+  //     });
+  //     alert(`File uploaded successfully. File ID: ${response.data.fileId}`);
+  //     setImage("");
+  //     setYear("");
+  //     setCategory("");
+  //     setFilename("");
+  //     setDialogVisible(false);
+  //   } catch (error) {
+  //     alert(`Upload failed: ${error.message}`);
+  //     console.error(
+  //       "Upload Error Details:",
+  //       error.response?.data || error.message
+  //     );
+  //   }
+  // };
+
+  const handleDialogSubmit = useCallback(() => {
+    // Close dialog and trigger the upload function
+    setDialogVisible(false);
+
+    // Proceed with the upload
+    uploadImage();
+    console.log("b");
+
+    // Reset the states to avoid lingering issues
+    setImage("");
+    setYear("");
+    setCategory("");
+    setFilename("");
+  }, [uploadImage]);
+
+  const uploadImage = useCallback(async () => {
     try {
-      const response = await axios.post(
-        "http://192.168.1.39:3000/upload",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      console.log("Uploading Image");
+      if (!image) {
+        console.error("No image found, exiting upload.");
+        return;
+      }
+      console.log("Image state before upload:", image);
+
+      const formData = new FormData();
+      formData.append("file", {
+        uri: image,
+        name: `${year}-${category}-${filename}.jpg`,
+        type: "image/jpeg",
+      });
+
+      console.log("FormData prepared:", formData);
+
+      const response = await axios.post(`${BASE_URL}/upload`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      console.log("Response received:", response);
       alert(`File uploaded successfully. File ID: ${response.data.fileId}`);
+
+      // Reset states only after successful upload
+      setImage("");
+      setYear("");
+      setCategory("");
+      setFilename("");
     } catch (error) {
+      console.error("Error in uploadImage:", error);
       alert(`Upload failed: ${error.message}`);
-      console.error(
-        "Upload Error Details:",
-        error.response?.data || error.message
-      );
     }
-  };
+  }, [image, year, category, filename]); // Ensure dependencies are correct
 
   return (
     <View style={styles.container}>
@@ -383,6 +487,41 @@ export default function TabBarC({ state, descriptors, navigation }) {
             <Text style={{ color: isFocused ? "#673ab7" : "#222" }}>
               {label}
             </Text>
+            {/* Dialog for Year and Category */}
+            <Dialog.Container visible={dialogVisible}>
+              <Dialog.Title>Enter Details</Dialog.Title>
+              <Dialog.Input
+                placeholder="Year"
+                value={year}
+                onChangeText={setYear}
+              />
+              <Dialog.Input
+                placeholder="Category"
+                value={category}
+                onChangeText={setCategory}
+              />
+              <Dialog.Input
+                placeholder="File Name"
+                value={filename}
+                onChangeText={setFilename}
+              />
+              <Dialog.Button
+                label="Cancel"
+                onPress={() => {
+                  console.log("Dialog canceled");
+                  setDialogVisible(false);
+                  setImage(""); // Clear image on cancel
+                }}
+              />
+              <Dialog.Button
+                label="Upload"
+                onPress={async () => {
+                  console.log("Dialog 'Upload' button pressed");
+                  setDialogVisible(false);
+                  await uploadImage(); // Await upload to avoid conflicts
+                }}
+              />
+            </Dialog.Container>
           </TouchableOpacity>
         );
       })}

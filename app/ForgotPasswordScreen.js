@@ -18,7 +18,7 @@ import ButtonC from "../components/ButtonC";
 import TextInputC from "../components/TextInputC";
 import BackButtonC from "../components/BackButtonC";
 
-const logoImg = require("../assets/adaptive-icon.png");
+const logoImg = require("../assets/taxride_logo.png");
 const BASE_URL = "http://192.168.1.39:3000";
 
 export default function ForgotPasswordScreen() {
@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   logoImgStyle: {
-    width: hp(30),
+    width: hp(20),
     height: hp(30),
     margin: hp(2),
   },

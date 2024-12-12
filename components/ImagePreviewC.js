@@ -70,6 +70,7 @@ export default function ImagePreviewC({
   const image = [
     {
       // For local images, pass an empty URL and use the `props` key
+      // url: imageUri,
       url: imageUri,
       props: {
         // source: require("../../../assets/cat.jpg"),
@@ -83,14 +84,19 @@ export default function ImagePreviewC({
 
   // Fetch image dimensions
   useEffect(() => {
+    if (!imageUri || !imageUri.startsWith("https://")) {
+      console.error("Invalid image URI provided: ", imageUri);
+      return; // Skip trying to load the image if the URI is invalid
+    }
+
     Image.getSize(
       imageUri,
       (width, height) => {
         setAspectRatio(width / height); // Calculate aspect ratio
-        console.log("aspect ratio:", width / height);
       },
       (error) => {
-        console.error("Error fetching image size:", error);
+        console.error("Error fetching image size, fallback to default:", error);
+        setAspectRatio(1); // Default aspect ratio
       }
     );
   }, [imageUri]);
@@ -136,6 +142,9 @@ export default function ImagePreviewC({
               <Image
                 {...props}
                 resizeMode="contain" // Fit image within the container
+                onError={(error) =>
+                  console.error("Error loading image:", error.nativeEvent.error)
+                }
               />
             </View>
           )}

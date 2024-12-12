@@ -8,6 +8,7 @@ import {
   Pressable,
   SafeAreaView,
   StatusBar,
+  ImageBackground,
 } from "react-native";
 import { useContext, useEffect } from "react";
 import {
@@ -17,13 +18,20 @@ import {
 import { Link, router } from "expo-router";
 import ButtonC from "../components/ButtonC";
 
-const logoImg = require("../assets/adaptive-icon.png");
+const logoImg = require("../assets/taxride_logo.png");
+const image = require("../assets/welcomeScreen.png");
 
 export default function WelcomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="default" />
-      <View style={styles.topContainer}></View>
+      {/* <View style={styles.topContainer}></View>
+       */}
+      <ImageBackground
+        source={image}
+        resizeMode="cover"
+        style={{ width: wp(100), height: hp(45) }}
+      />
       <View style={styles.bottomContainer}>
         <View style={styles.logoContainer}>
           <Image source={logoImg} style={styles.logoImgStyle} />

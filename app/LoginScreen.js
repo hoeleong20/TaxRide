@@ -19,7 +19,7 @@ import { Link, router } from "expo-router";
 
 const BASE_URL = "http://192.168.1.39:3000";
 
-const logoImg = require("../assets/adaptive-icon.png");
+const logoImg = require("../assets/taxride_logo.png");
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("hoeleongjob01@gmail.com");
@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   logoImgStyle: {
-    width: hp(30),
+    width: hp(20),
     height: hp(20),
     margin: hp(2),
   },

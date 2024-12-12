@@ -17,7 +17,7 @@ import TextInputC from "../components/TextInputC";
 import BackButtonC from "../components/BackButtonC";
 import { Link } from "expo-router";
 
-const logoImg = require("../assets/adaptive-icon.png");
+const logoImg = require("../assets/taxride_logo.png");
 const BASE_URL = "http://192.168.1.39:3000";
 
 export default function SignUpScreen() {
@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   logoImgStyle: {
-    width: hp(30),
+    width: hp(20),
     height: hp(20),
     margin: hp(2),
   },
