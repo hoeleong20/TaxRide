@@ -19,7 +19,9 @@ import TextInputC from "../components/TextInputC";
 import BackButtonC from "../components/BackButtonC";
 
 const logoImg = require("../assets/taxride_logo.png");
-const BASE_URL = "http://192.168.1.39:3000";
+// const BASE_URL = "http://192.168.1.39:3000";
+import { BASE_URL } from "@env";
+
 
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState("");

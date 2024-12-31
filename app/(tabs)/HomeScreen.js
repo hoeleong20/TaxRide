@@ -25,7 +25,9 @@ import * as AuthSession from "expo-auth-session";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const profileImage = require("../../assets/userProfile.jpg");
-const BASE_URL = "http://192.168.1.39:3000";
+// const BASE_URL = "http://192.168.1.39:3000";
+import { BASE_URL } from "@env";
+
 
 export default function HomeScreen() {
   const [name, setName] = useState("Ayush Srivastava");

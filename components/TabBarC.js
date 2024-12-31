@@ -22,7 +22,8 @@ import * as FileSystem from "expo-file-system";
 import axios from "axios";
 import Dialog from "react-native-dialog";
 
-const BASE_URL = "http://192.168.1.39:3000";
+// const BASE_URL = "http://192.168.1.39:3000";
+import { BASE_URL } from "@env";
 
 export default function TabBarC({ state, descriptors, navigation }) {
   const icons = {
@@ -386,6 +387,7 @@ export default function TabBarC({ state, descriptors, navigation }) {
   const uploadImage = useCallback(async () => {
     try {
       console.log("Uploading Image");
+
       if (!image) {
         console.error("No image found, exiting upload.");
         return;
@@ -398,6 +400,9 @@ export default function TabBarC({ state, descriptors, navigation }) {
         name: `${year}-${category}-${filename}.jpg`,
         type: "image/jpeg",
       });
+
+      console.log("FormData content:", Array.from(formData));
+      console.log("Image URI being uploaded:", image);
 
       console.log("FormData prepared:", formData);
 
@@ -416,6 +421,8 @@ export default function TabBarC({ state, descriptors, navigation }) {
       setCategory("");
       setFilename("");
     } catch (error) {
+      console.error("Error in uploadImage:", error.toJSON());
+
       console.error("Error in uploadImage:", error);
       alert(`Upload failed: ${error.message}`);
     }

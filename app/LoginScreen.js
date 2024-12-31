@@ -17,7 +17,9 @@ import TextInputC from "../components/TextInputC";
 import BackButtonC from "../components/BackButtonC";
 import { Link, router } from "expo-router";
 
-const BASE_URL = "http://192.168.1.39:3000";
+import { BASE_URL } from "@env";
+
+// const BASE_URL = "http://192.168.1.28:3000"; //http://localhost:3000
 
 const logoImg = require("../assets/taxride_logo.png");
 

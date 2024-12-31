@@ -16,6 +16,8 @@ import FileC from "../../../components/FileC";
 import FileScreenTitleC from "../../../components/FileScreenTitleC";
 import ImagePreviewC from "../../../components/ImagePreviewC";
 
+import { BASE_URL } from "@env";
+
 export default function FilesYCScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [imageName, setImageName] = useState("");
@@ -24,20 +26,47 @@ export default function FilesYCScreen() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // const fetchFiles = async () => {
+    //   try {
+    //     const response = await fetch(`${BASE_URL}/files`);
+    //     const data = await response.json();
+
+    //     if (data.files) {
+    //       console.log("Fetched files:", data.files); // Log files to inspect
+    //       setFiles(data.files);
+    //     } else {
+    //       Alert.alert("No files found in the folder.");
+    //     }
+    //   } catch (error) {
+    //     console.error("Error fetching files:", error);
+    //     Alert.alert("Error fetching files.");
+    //   } finally {
+    //     setLoading(false);
+    //   }
+    // };
+
     const fetchFiles = async () => {
       try {
-        const response = await fetch("http://192.168.1.39:3000/google/files");
+        const response = await fetch(`${BASE_URL}/files`);
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
         const data = await response.json();
 
-        if (data.files) {
-          console.log("Fetched files:", data.files); // Log files to inspect
-          setFiles(data.files);
-        } else {
-          Alert.alert("No files found in the folder.");
+        if (!data || !Array.isArray(data)) {
+          console.warn("Invalid or empty API response:", data);
+          setFiles([]);
+          return;
         }
+
+        setFiles(data);
+        console.log("Files fetched successfully:", data);
       } catch (error) {
         console.error("Error fetching files:", error);
-        Alert.alert("Error fetching files.");
+        Alert.alert("Failed to fetch files. Please try again.");
+        setFiles([]);
       } finally {
         setLoading(false);
       }
@@ -55,6 +84,7 @@ export default function FilesYCScreen() {
   }, [imageUri]);
 
   const openFile = (fileName, fileUri) => {
+    console.log("fileUri passed to openFile:", fileUri);
     if (!fileUri || !fileUri.startsWith("https://")) {
       console.error("Invalid image URI provided: ", fileUri);
       Alert.alert("Invalid or inaccessible file URI.");
