@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useContext } from "react";
 import {
   View,
   StyleSheet,
@@ -24,8 +24,11 @@ import Dialog from "react-native-dialog";
 import DropDownPicker from "react-native-dropdown-picker";
 
 import { BASE_URL } from "@env";
+import { FilesContext } from "../app/FilesContext";
 
 export default function TabBarC({ state, descriptors, navigation }) {
+  const { refreshFiles } = useContext(FilesContext);
+
   const [years, setYears] = useState([]);
   const [categories, setCategories] = useState([]);
 
@@ -429,6 +432,7 @@ export default function TabBarC({ state, descriptors, navigation }) {
 
       console.log("Response received:", response);
       alert(`File uploaded successfully. File ID: ${response.data.fileId}`);
+      await refreshFiles();
 
       // Reset states only after successful upload
       setImage("");

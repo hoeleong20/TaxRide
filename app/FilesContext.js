@@ -8,47 +8,50 @@ export const FilesProvider = ({ children }) => {
     years: {}, // Object to store year-based data
   });
 
+  const fetchFiles = async () => {
+    try {
+      const response = await fetch(`${BASE_URL}/files`);
+      const data = await response.json();
+
+      // Process files
+      const organizedData = data.reduce((acc, file) => {
+        const [year, category, fileNameWithExtension] = file.name.split("-");
+        const fileName = fileNameWithExtension.split(".")[0]; // Remove extension
+
+        // Ensure year exists in structure
+        if (!acc[year]) acc[year] = {};
+
+        // Ensure category exists under year
+        if (!acc[year][category]) acc[year][category] = [];
+
+        // Add file data
+        acc[year][category].push({
+          id: file.id,
+          fileName,
+          size: file.size,
+          modifiedTime: file.modifiedTime,
+          directLink: file.directLink,
+        });
+
+        return acc;
+      }, {});
+
+      setStructuredData({ years: organizedData });
+    } catch (error) {
+      console.error("Error fetching or processing files:", error);
+    }
+  };
+
+  const refreshFiles = async () => {
+    await fetchFiles();
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch(`${BASE_URL}/files`);
-        const data = await response.json();
-  
-        // Process files
-        const organizedData = data.reduce((acc, file) => {
-          const [year, category, fileNameWithExtension] = file.name.split("-");
-          const fileName = fileNameWithExtension.split(".")[0]; // Remove extension
-  
-          // Ensure year exists in structure
-          if (!acc[year]) acc[year] = {};
-  
-          // Ensure category exists under year
-          if (!acc[year][category]) acc[year][category] = [];
-  
-          // Add file data
-          acc[year][category].push({
-            id: file.id,
-            fileName,
-            size: file.size,
-            modifiedTime: file.modifiedTime,
-            directLink: file.directLink,
-          });
-  
-          return acc;
-        }, {});
-  
-        setStructuredData({ years: organizedData });
-      } catch (error) {
-        console.error("Error fetching or processing files:", error);
-      }
-    };
-  
-    fetchData();
+    fetchFiles();
   }, []);
-  
 
   return (
-    <FilesContext.Provider value={{ structuredData }}>
+    <FilesContext.Provider value={{ structuredData, refreshFiles }}>
       {children}
     </FilesContext.Provider>
   );
