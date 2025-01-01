@@ -45,6 +45,17 @@ export default function FilesYCScreen() {
     setImageUri(fileUri);
   };
 
+  const formatDate = (dateString) => {
+    if (!dateString) return "--";
+    const options = { day: "2-digit", month: "short", year: "numeric" };
+    return new Intl.DateTimeFormat("en-GB", options).format(new Date(dateString));
+  };
+
+  const formatSize = (sizeInBytes) => {
+    if (!sizeInBytes) return "--";
+    return `${Math.round(sizeInBytes / 1024)} KB`; // Convert to KB and round off
+  };
+
   return (
     <SafeAreaView>
       <ScrollView style={styles.container}>
@@ -57,8 +68,8 @@ export default function FilesYCScreen() {
             >
               <FileC
                 fileName={file.fileName}
-                fileDate={"--"} // You can replace this with actual file date if available
-                fileSize={"--"} // Replace with actual file size if available
+                fileDate={formatDate(file.modifiedTime)} // Format date
+                fileSize={formatSize(file.size)} // Format size
               />
             </Pressable>
           ))}

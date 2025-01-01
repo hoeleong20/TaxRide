@@ -15,7 +15,7 @@ export default function FileC({ fileName, fileDate, fileSize }) {
             <View style={styles.colStyle}>
               <Text style={styles.fileHeaderText}>{fileName}</Text>
               <Text style={styles.fileAltText}>
-                {fileDate} | {fileSize}MB
+                {fileDate} | {fileSize}
               </Text>
             </View>
           </View>
