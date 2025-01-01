@@ -229,15 +229,6 @@ export default function TabBarC({ state, descriptors, navigation }) {
     }
   };
 
-  // useEffect(() => {
-  //   console.log("Image changed:", image);
-  //   if (image) {
-  //     console.log("Dialog visibility set to true");
-  //     uploadImage();
-  //     // setDialogVisible(true);
-  //   }
-  // }, [image]);
-
   useEffect(() => {
     console.log("Updated image state:", image);
   }, [image]);
@@ -458,18 +449,6 @@ export default function TabBarC({ state, descriptors, navigation }) {
 
         const isFocused = state.index === index;
 
-        // const onPress = () => {
-        //   const event = navigation.emit({
-        //     type: "tabPress",
-        //     target: route.key,
-        //     canPreventDefault: true,
-        //   });
-
-        //   if (!isFocused && !event.defaultPrevented) {
-        //     navigation.navigate(route.name, route.params);
-        //   }
-        // };
-
         const onPress = () => {
           if (route.name === "AddScreen") {
             handleAddAction();
@@ -514,16 +493,6 @@ export default function TabBarC({ state, descriptors, navigation }) {
             {/* Dialog for Year and Category */}
             <Dialog.Container visible={dialogVisible}>
               <Dialog.Title>Document Details</Dialog.Title>
-              {/* <Dialog.Input
-                placeholder="Year"
-                value={year}
-                onChangeText={setYear}
-              />
-              <Dialog.Input
-                placeholder="Category"
-                value={category}
-                onChangeText={setCategory}
-              /> */}
 
               {/* Dropdown for Year */}
               <DropDownPicker
