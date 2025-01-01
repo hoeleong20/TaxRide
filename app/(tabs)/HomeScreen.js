@@ -27,142 +27,52 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const profileImage = require("../../assets/userProfile.jpg");
 // const BASE_URL = "http://192.168.1.39:3000";
 import { BASE_URL } from "@env";
-
+import axios from "axios";
 
 export default function HomeScreen() {
   const [name, setName] = useState("Ayush Srivastava");
   const [cloudStoragePerc, setCloudStoragePerc] = useState(37);
   const [internalStoragePerc, setInternalStoragePerc] = useState(66);
   const [imageName, setImageName] = useState("");
+  const [recentFiles, setRecentFiles] = useState([]);
 
   const [modalVisible, setModalVisible] = useState(false);
+  const [imageUri, setImageUri] = useState("");
 
-  const imageUri =
-    // "https://static.vecteezy.com/system/resources/previews/033/540/048/non_2x/two-funny-cats-take-a-selfie-on-the-beach-humor-created-using-artificial-intelligence-free-photo.jpg";
-    "https://plus.unsplash.com/premium_photo-1677545183884-421157b2da02?fm=jpg&q=60&w=3000&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8ZnVubnklMjBjYXR8ZW58MHx8MHx8fDA%3D";
-
-  const openFile = (imageName) => {
+  const openFile = (imageName, fileUri) => {
     setModalVisible(true);
     setImageName(imageName);
+    setImageUri(fileUri);
   };
 
-  // const handleGoogleAuth = async () => {
-  //   try {
-  //     // Step 1: Fetch the Google Auth URL from the backend
-  //     const response = await fetch(`${BASE_URL}/google/auth-url`);
-  //     const { authUrl } = await response.json();
-  //     console.log(authUrl);
+  // Extract filename without year and category
+  const extractFileName = (fullName) => {
+    const parts = fullName.split("-");
+    return parts.slice(2).join("-"); // Skip the year and category
+  };
 
-  //     // Step 2: Open the authUrl in a browser
-  //     const redirectResult = await Linking.openURL(authUrl);
-  //     console.log(redirectResult);
-  //     console.log(redirectResult.url);
+  // Fetch recent files
+  useEffect(() => {
+    const fetchRecentFiles = async () => {
+      try {
+        const response = await axios.get(`${BASE_URL}/files`);
+        const files = response.data;
 
-  //     // Step 3: Handle callback and get tokens
-  //     if (redirectResult && redirectResult.url) {
-  //       console.log("1");
+        // Sort files by modified time in descending order
+        const sortedFiles = files.sort(
+          (a, b) => new Date(b.modifiedTime) - new Date(a.modifiedTime)
+        );
 
-  //       const code = new URLSearchParams(
-  //         new URL(redirectResult.url).search
-  //       ).get("code");
+        // Take the top two most recent files
+        setRecentFiles(sortedFiles.slice(0, 2));
+      } catch (error) {
+        console.error("Error fetching recent files:", error);
+        Alert.alert("Error", "Failed to load recent files.");
+      }
+    };
 
-  //       console.log("2");
-
-  //       const tokenResponse = await fetch(`${BASE_URL}/google/auth-callback`, {
-  //         method: "POST",
-  //         headers: { "Content-Type": "application/json" },
-  //         body: JSON.stringify({ code }),
-  //       });
-
-  //       console.log("3");
-
-  //       const tokens = await tokenResponse.json();
-
-  //       if (tokenResponse.ok) {
-  //         Alert.alert("Success", "Google Drive connected successfully!");
-  //         // Save tokens for later use
-  //         await AsyncStorage.setItem(
-  //           "googleDriveTokens",
-  //           JSON.stringify(tokens)
-  //         );
-  //       } else {
-  //         Alert.alert(
-  //           "Error",
-  //           tokens.message || "Failed to connect to Google Drive."
-  //         );
-  //       }
-  //     }
-  //   } catch (error) {
-  //     console.error("Error in Google Auth flow:", error);
-  //     Alert.alert(
-  //       "Error",
-  //       "Something went wrong during Google authentication."
-  //     );
-  //   }
-  // };
-
-  //------------------------------
-  // const [request, response, promptAsync] = AuthSession.useAuthRequest({
-  //   clientId:
-  //     "18690988914-qjcdpeupo15gn8jnk3tljor95aoml7lg.apps.googleusercontent.com",
-  //   redirectUri: AuthSession.makeRedirectUri({ useProxy: true }),
-  //   scopes: ["profile", "email"],
-  //   responseType: AuthSession.ResponseType.Code,
-  // });
-
-  // useEffect(() => {
-  //   if (response?.type === "success") {
-  //     const { code } = response.params;
-  //     console.log("Authentication successful, code:", code);
-
-  //     // Exchange the authorization code for tokens
-  //     (async () => {
-  //       try {
-  //         const tokenResponse = await fetch(
-  //           `${BASE_URL}/google/auth-callback`,
-  //           {
-  //             method: "POST",
-  //             headers: { "Content-Type": "application/json" },
-  //             body: JSON.stringify({ code }),
-  //           }
-  //         );
-
-  //         if (tokenResponse.ok) {
-  //           const tokens = await tokenResponse.json();
-  //           Alert.alert("Success", "Google Drive connected successfully!");
-  //           await AsyncStorage.setItem(
-  //             "googleDriveTokens",
-  //             JSON.stringify(tokens)
-  //           );
-  //         } else {
-  //           const errorData = await tokenResponse.json();
-  //           Alert.alert(
-  //             "Error",
-  //             errorData.message || "Failed to connect to Google Drive."
-  //           );
-  //         }
-  //       } catch (error) {
-  //         console.error("Error during token exchange:", error);
-  //         Alert.alert("Error", "Something went wrong.");
-  //       }
-  //     })();
-  //   }
-  // }, [response]);
-
-  // const handleGoogleAuth = async () => {
-  //   console.log("Triggering Google authentication...");
-  //   console.log("Auth request:", request);
-  //   console.log(
-  //     "Redirect URI:",
-  //     AuthSession.makeRedirectUri({ useProxy: true })
-  //   );
-
-  //   if (request) {
-  //     await promptAsync();
-  //   } else {
-  //     Alert.alert("Error", "Authentication request could not be created.");
-  //   }
-  // };
+    fetchRecentFiles();
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -207,28 +117,33 @@ export default function HomeScreen() {
             </View>
           </View>
           <View>
-            <Pressable onPress={() => openFile("Invoice")}>
-              <FileC
-                fileName={"Invoice"}
-                fileDate={"25 Oct 2023"}
-                fileSize={2.4}
-              />
-            </Pressable>
-            <Pressable onPress={() => openFile("Camera Images")}>
-              <FileC
-                fileName={"Camera Images"}
-                fileDate={"19 Oct 2023"}
-                fileSize={34}
-              />
-            </Pressable>
+            {recentFiles.map((file) => (
+              <Pressable
+                key={file.id}
+                onPress={() =>
+                  openFile(extractFileName(file.name), file.directLink)
+                }
+              >
+                <FileC
+                  fileName={extractFileName(file.name)}
+                  fileDate={new Date(file.modifiedTime).toLocaleDateString(
+                    "en-GB",
+                    { day: "2-digit", month: "short", year: "numeric" }
+                  )}
+                  fileSize={`${Math.round(file.size / 1024)} KB`} // Convert size to KB
+                />
+              </Pressable>
+            ))}
           </View>
         </View>
-        <ImagePreviewC
-          modalVisible={modalVisible}
-          setModalVisible={setModalVisible}
-          imageUri={imageUri}
-          imageName={imageName}
-        />
+        {imageUri && (
+          <ImagePreviewC
+            modalVisible={modalVisible}
+            setModalVisible={setModalVisible}
+            imageUri={imageUri}
+            imageName={imageName}
+          />
+        )}
       </ScrollView>
       {/* <ButtonC
         textContent="Login with Google"
