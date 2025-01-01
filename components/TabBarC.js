@@ -21,11 +21,29 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as FileSystem from "expo-file-system";
 import axios from "axios";
 import Dialog from "react-native-dialog";
+import DropDownPicker from "react-native-dropdown-picker";
 
-// const BASE_URL = "http://192.168.1.39:3000";
 import { BASE_URL } from "@env";
 
 export default function TabBarC({ state, descriptors, navigation }) {
+  const [years, setYears] = useState([]);
+  const [categories, setCategories] = useState([]);
+
+  const [openYear, setOpenYear] = useState(false);
+  const [openCategory, setOpenCategory] = useState(false);
+
+  useEffect(() => {
+    // Fetch years
+    axios.get(`${BASE_URL}/years`).then((response) => {
+      setYears(response.data);
+    });
+
+    // Fetch categories
+    axios.get(`${BASE_URL}/categories`).then((response) => {
+      setCategories(response.data);
+    });
+  }, []);
+
   const icons = {
     HomeScreen: (props) => (
       <Icon name="house-chimney" size={wp(6)} style={styles.icon} {...props} />
@@ -188,7 +206,7 @@ export default function TabBarC({ state, descriptors, navigation }) {
     console.log("Choose From Library selected");
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: "images",
         quality: 1,
       });
 
@@ -385,9 +403,9 @@ export default function TabBarC({ state, descriptors, navigation }) {
   }, [uploadImage]);
 
   const uploadImage = useCallback(async () => {
+    console.log("Image URI before upload:", image);
     try {
       console.log("Uploading Image");
-
       if (!image) {
         console.error("No image found, exiting upload.");
         return;
@@ -400,9 +418,6 @@ export default function TabBarC({ state, descriptors, navigation }) {
         name: `${year}-${category}-${filename}.jpg`,
         type: "image/jpeg",
       });
-
-      console.log("FormData content:", Array.from(formData));
-      console.log("Image URI being uploaded:", image);
 
       console.log("FormData prepared:", formData);
 
@@ -421,8 +436,6 @@ export default function TabBarC({ state, descriptors, navigation }) {
       setCategory("");
       setFilename("");
     } catch (error) {
-      console.error("Error in uploadImage:", error.toJSON());
-
       console.error("Error in uploadImage:", error);
       alert(`Upload failed: ${error.message}`);
     }
@@ -496,8 +509,8 @@ export default function TabBarC({ state, descriptors, navigation }) {
             </Text>
             {/* Dialog for Year and Category */}
             <Dialog.Container visible={dialogVisible}>
-              <Dialog.Title>Enter Details</Dialog.Title>
-              <Dialog.Input
+              <Dialog.Title>Document Details</Dialog.Title>
+              {/* <Dialog.Input
                 placeholder="Year"
                 value={year}
                 onChangeText={setYear}
@@ -506,7 +519,58 @@ export default function TabBarC({ state, descriptors, navigation }) {
                 placeholder="Category"
                 value={category}
                 onChangeText={setCategory}
+              /> */}
+
+              {/* Dropdown for Year */}
+              <DropDownPicker
+                open={openYear}
+                value={year}
+                items={years}
+                setOpen={setOpenYear}
+                setValue={setYear}
+                setItems={setYears}
+                placeholder="Select a Year"
+                listMode="SCROLLVIEW" // Enable ScrollView for dropdown options
+                style={{
+                  marginBottom: 15,
+                  borderWidth: 1,
+                  borderColor: "#ccc",
+                }}
+                dropDownContainerStyle={{
+                  maxHeight: 120, // Restrict height to allow scrolling
+                  borderWidth: 1,
+                  borderColor: "#ccc",
+                  zIndex: 3000, // Ensure it appears above other elements
+                }}
+                zIndex={2000} // Ensure dropdown is above other elements
+                zIndexInverse={1000} // Prevent overlap with other components
               />
+
+              {/* Dropdown for Category */}
+              <DropDownPicker
+                open={openCategory}
+                value={category}
+                items={categories}
+                setOpen={setOpenCategory}
+                setValue={setCategory}
+                setItems={setCategories}
+                placeholder="Select a Category"
+                listMode="SCROLLVIEW" // Enable ScrollView for dropdown options
+                style={{
+                  marginBottom: 15,
+                  borderWidth: 1,
+                  borderColor: "#ccc",
+                }}
+                dropDownContainerStyle={{
+                  maxHeight: 120, // Restrict height to allow scrolling
+                  borderWidth: 1,
+                  borderColor: "#ccc",
+                  zIndex: 3000, // Ensure it appears above other elements
+                }}
+                zIndex={2000} // Ensure dropdown is above other elements
+                zIndexInverse={1000} // Prevent overlap with other components
+              />
+
               <Dialog.Input
                 placeholder="File Name"
                 value={filename}
@@ -518,6 +582,9 @@ export default function TabBarC({ state, descriptors, navigation }) {
                   console.log("Dialog canceled");
                   setDialogVisible(false);
                   setImage(""); // Clear image on cancel
+                  setYear("");
+                  setCategory("");
+                  setFilename("");
                 }}
               />
               <Dialog.Button

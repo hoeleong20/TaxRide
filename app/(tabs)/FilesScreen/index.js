@@ -1,3 +1,7 @@
+import React, { useContext } from "react";
+import { FilesContext } from "../../FilesContext";
+import { useRouter } from "expo-router";
+
 import {
   Text,
   View,
@@ -8,40 +12,36 @@ import {
   SafeAreaView,
   Pressable,
   ScrollView,
+  StatusBar,
 } from "react-native";
-import { StatusBar } from "react-native";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
 import FolderC from "../../../components/FolderC";
 
-const logoImg = require("../../../assets/adaptive-icon.png");
-
 export default function FilesScreen() {
+  const { structuredData } = useContext(FilesContext);
+  const { years } = structuredData;
+  const router = useRouter();
+
+  if (!years) return <Text>Loading...</Text>;
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.innerContainer}>
         <View style={styles.screenTitle}>
           <Text style={styles.screenTitleText}>My Folders</Text>
         </View>
+
         <View>
-          <FolderC
-            folderName={"2024"}
-            navigateToPath="/(tabs)/FilesScreen/FilesYScreen"
-          />
-          <FolderC
-            folderName={"2023"}
-            navigateToPath="/(tabs)/FilesScreen/FilesYScreen"
-          />
-          <FolderC
-            folderName={"2022"}
-            navigateToPath="/(tabs)/FilesScreen/FilesYScreen"
-          />
-          <FolderC
-            folderName={"2021"}
-            navigateToPath="/(tabs)/FilesScreen/FilesYScreen"
-          />
+          {Object.keys(years).map((year) => (
+            <FolderC
+              key={year}
+              folderName={year}
+              onPress={() => router.push(`/FilesScreen/FilesYScreen/${year}`)}
+            />
+          ))}
         </View>
       </ScrollView>
     </SafeAreaView>

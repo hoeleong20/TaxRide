@@ -6,11 +6,12 @@ import {
 } from "react-native-responsive-screen";
 import Icon from "react-native-vector-icons/Ionicons";
 
-export default function FolderC({ folderName, navigateToPath }) {
+export default function FolderC({ folderName, onPress }) {
   return (
     <View>
       <Pressable
-        onPress={() => router.push(navigateToPath)}
+        // onPress={() => router.push(navigateToPath)}
+        onPress={onPress}
         style={styles.rowContainer}
       >
         <View>
