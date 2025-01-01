@@ -6,6 +6,7 @@ import {
   Platform,
   Text,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import {
   widthPercentageToDP as wp,
@@ -163,7 +164,6 @@ export default function TabBarC({ state, descriptors, navigation }) {
         // quality: 1,
       });
       console.log("2");
-      // saveFile();
 
       // AsyncStorage.setItem("savedImage", JSON.stringify(result));
       // const jsonValue = await AsyncStorage.getItem("savedImage");
@@ -179,31 +179,6 @@ export default function TabBarC({ state, descriptors, navigation }) {
       alert("error : " + error.message);
     }
   }, []);
-
-  // const handleLaunchImageLibrary = async () => {
-  //   console.log("1");
-  //   try {
-  //     // No permissions request is necessary for launching the image library
-  //     let result = await ImagePicker.launchImageLibraryAsync({
-  //       // mediaTypes: ["images", "videos"],
-  //       // allowsEditing: true,
-  //       // aspect: [4, 3],
-  //       // quality: 1,
-  //     });
-  //     console.log("2");
-
-  //     if (!result.canceled) {
-  //       console.log(result.assets[0]?.uri);
-  //       saveImage(result.assets[0]?.uri);
-  //       setImage(result.assets[0].uri);
-  //       console.log("Set image state with:", result.assets[0]?.uri);
-
-  //       setDialogVisible(true); // Show dialog after selecting image
-  //     }
-  //   } catch (error) {
-  //     alert("error : " + error.message);
-  //   }
-  // };
 
   const handleLaunchImageLibrary = async () => {
     console.log("Choose From Library selected");
@@ -237,29 +212,6 @@ export default function TabBarC({ state, descriptors, navigation }) {
     console.log("Dialog visibility changed:", dialogVisible);
   }, [dialogVisible]);
 
-  async function saveFile() {
-    console.log("run save file");
-
-    // 1. Create a file
-    const { base64, fileName } = image;
-    const parseFile = new Parse.File(fileName, { base64 });
-
-    // 2. Save the file
-    try {
-      const responseFile = await parseFile.save();
-      const Gallery = Parse.Object.extend("Gallery");
-      const gallery = new Gallery();
-      gallery.set("picture", responseFile);
-
-      await gallery.save();
-      Alert.alert("The file has been saved to Back4app.");
-    } catch (error) {
-      console.log(
-        "The file either could not be read, or could not be saved to Back4app."
-      );
-    }
-  }
-
   const saveImage = async (imageUri) => {
     if (!imageUri) {
       console.error("Error: imageUri is null or undefined");
@@ -279,122 +231,6 @@ export default function TabBarC({ state, descriptors, navigation }) {
       console.error("Error saving image:", error);
     }
   };
-
-  // const handleLaunchCamera = async () => {
-  //   try {
-  //     const result = await ImagePicker.launchCameraAsync();
-  //     if (!result.canceled) {
-  //       await uploadToGoogleDrive(result.assets[0].uri);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error launching camera:", error);
-  //     Alert.alert("Error", "Failed to launch camera.");
-  //   }
-  // };
-
-  // const handleLaunchImageLibrary = async () => {
-  //   try {
-  //     const result = await ImagePicker.launchImageLibraryAsync();
-  //     if (!result.canceled) {
-  //       await uploadToGoogleDrive(result.assets[0].uri);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error launching image library:", error);
-  //     Alert.alert("Error", "Failed to open image library.");
-  //   }
-  // };
-
-  // const uploadToGoogleDrive = async (fileUri) => {
-  //   try {
-  //     const tokens = await AsyncStorage.getItem("googleDriveTokens");
-
-  //     if (!tokens) {
-  //       Alert.alert("Error", "Please connect to Google Drive first.");
-  //       return;
-  //     }
-
-  //     const fileName = `my-image-${Date.now()}.png`;
-  //     const fileType = "image/png";
-  //     const fileBuffer = await FileSystem.readAsStringAsync(fileUri, {
-  //       encoding: FileSystem.EncodingType.Base64,
-  //     });
-
-  //     const formData = new FormData();
-  //     formData.append("file", {
-  //       uri: fileUri,
-  //       name: fileName,
-  //       type: fileType,
-  //     });
-  //     formData.append("token", tokens);
-
-  //     const response = await fetch(`${BASE_URL}/google/upload`, {
-  //       method: "POST",
-  //       body: formData,
-  //       headers: {
-  //         "Content-Type": "multipart/form-data",
-  //       },
-  //     });
-
-  //     if (response.ok) {
-  //       Alert.alert("Success", "File uploaded to Google Drive!");
-  //     } else {
-  //       const error = await response.text();
-  //       Alert.alert("Error", `File upload failed: ${error}`);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error uploading file:", error);
-  //     Alert.alert("Error", "Failed to upload file. Please try again.");
-  //   }
-  // };
-
-  // const uploadImage = async () => {
-  //   console.log("13");
-  //   if (!image) return;
-  //   console.log("14");
-
-  //   const formData = new FormData();
-  //   formData.append("file", {
-  //     uri: image,
-  //     name: `${year}-${category}-${filename}.jpg`,
-  //     type: "image/jpeg",
-  //   });
-  //   console.log("15");
-
-  //   try {
-  //     const response = await axios.post(`${BASE_URL}/upload`, formData, {
-  //       headers: {
-  //         "Content-Type": "multipart/form-data",
-  //       },
-  //     });
-  //     alert(`File uploaded successfully. File ID: ${response.data.fileId}`);
-  //     setImage("");
-  //     setYear("");
-  //     setCategory("");
-  //     setFilename("");
-  //     setDialogVisible(false);
-  //   } catch (error) {
-  //     alert(`Upload failed: ${error.message}`);
-  //     console.error(
-  //       "Upload Error Details:",
-  //       error.response?.data || error.message
-  //     );
-  //   }
-  // };
-
-  const handleDialogSubmit = useCallback(() => {
-    // Close dialog and trigger the upload function
-    setDialogVisible(false);
-
-    // Proceed with the upload
-    uploadImage();
-    console.log("b");
-
-    // Reset the states to avoid lingering issues
-    setImage("");
-    setYear("");
-    setCategory("");
-    setFilename("");
-  }, [uploadImage]);
 
   const uploadImage = useCallback(async () => {
     console.log("Image URI before upload:", image);
@@ -421,8 +257,7 @@ export default function TabBarC({ state, descriptors, navigation }) {
         },
       });
 
-      console.log("Response received:", response);
-      alert(`File uploaded successfully. File ID: ${response.data.fileId}`);
+      console.log("File uploaded successfully:", response.data);
       await refreshFiles();
 
       // Reset states only after successful upload
@@ -431,10 +266,124 @@ export default function TabBarC({ state, descriptors, navigation }) {
       setCategory("");
       setFilename("");
     } catch (error) {
-      console.error("Error in uploadImage:", error);
-      alert(`Upload failed: ${error.message}`);
+      if (error.response && error.response.status === 507) {
+        console.warn("Insufficient Google Drive space. Saving file locally.");
+        try {
+          const localFiles =
+            JSON.parse(await AsyncStorage.getItem("localFiles")) || [];
+          localFiles.push({
+            uri: image,
+            name: `${year}-${category}-${filename}.jpg`,
+          });
+          await AsyncStorage.setItem("localFiles", JSON.stringify(localFiles));
+
+          // Alert the user about the issue and fallback
+          Alert.alert(
+            "Insufficient Storage",
+            "Google Drive does not have enough space. The file has been saved locally and will be retried later.",
+            [{ text: "OK" }]
+          );
+        } catch (localError) {
+          console.error("Error saving file locally:", localError);
+          Alert.alert(
+            "Error",
+            "An error occurred while saving the file locally. Please try again later.",
+            [{ text: "OK" }]
+          );
+        }
+      } else {
+        console.error("Error in uploadImage:", error);
+        alert(`Upload failed: ${error.message}`);
+      }
     }
-  }, [image, year, category, filename]); // Ensure dependencies are correct
+  }, [image, year, category, filename]);
+
+  const retryLocalUploads = async () => {
+    try {
+      const localFiles = await AsyncStorage.getItem("localFiles");
+      console.log("localFiles:", localFiles);
+      if (!localFiles) return;
+
+      const files = JSON.parse(localFiles);
+
+      let hasSpace = true; // Flag to determine if Google Drive has enough space
+      let successfullyUploadedCount = 0; // Count of successfully uploaded files
+
+      for (let i = 0; i < files.length; i++) {
+        if (!hasSpace) break; // Stop if we detect insufficient space
+
+        const file = files[i];
+        const formData = new FormData();
+        formData.append("file", {
+          uri: file.uri,
+          name: file.name,
+          type: "image/jpeg",
+        });
+
+        try {
+          const response = await axios.post(`${BASE_URL}/upload`, formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+
+          if (response.status === 200) {
+            console.log(`File ${file.name} uploaded successfully.`);
+            files.splice(i, 1); // Remove successfully uploaded file
+            i--; // Adjust index after removal
+            await refreshFiles();
+            successfullyUploadedCount++; // Increment success count
+          } else if (response.status === 507) {
+            console.warn(
+              `Google Drive has insufficient space. File ${file.name} not uploaded.`
+            );
+            hasSpace = false; // Set flag to stop further uploads
+          } else {
+            console.warn(
+              `File ${file.name} could not be uploaded. Retrying later.`
+            );
+          }
+        } catch (error) {
+          if (error.response && error.response.status === 507) {
+            console.warn(
+              `Google Drive has insufficient space. File ${file.name} not uploaded.`
+            );
+            hasSpace = false; // Set flag to stop further uploads
+          } else {
+            console.error(`Error uploading file ${file.name}:`, error.message);
+          }
+        }
+      }
+
+      // Update local storage with remaining files
+      await AsyncStorage.setItem("localFiles", JSON.stringify(files));
+
+      // Alert for successful uploads
+      if (successfullyUploadedCount > 0) {
+        Alert.alert(
+          "Upload Successful",
+          `${successfullyUploadedCount} file(s) have been uploaded to Google Drive.`,
+          [{ text: "OK" }]
+        );
+      }
+
+      // Inform user if there are still files remaining locally
+      if (files.length > 0 && !hasSpace) {
+        Alert.alert(
+          "Upload Pending",
+          "Some files remain locally due to insufficient Google Drive space. They will be retried later.",
+          [{ text: "OK" }]
+        );
+      }
+    } catch (error) {
+      console.error("Error retrying local uploads:", error);
+      Alert.alert("Error", "An error occurred while retrying uploads.", [
+        { text: "OK" },
+      ]);
+    }
+  };
+
+  useEffect(() => {
+    retryLocalUploads();
+  }, []);
 
   return (
     <View style={styles.container}>
