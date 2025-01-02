@@ -456,12 +456,6 @@ export default function HomeScreen() {
             <Dialog.Button label="Yes" onPress={handleDeleteFile} />
           </Dialog.Container>
         </ScrollView>
-        {/* <ButtonC
-        textContent="Login with Google"
-        buttonStyle={styles.googleLoginButton}
-        textStyle={styles.googleLoginText}
-        onPress={handleGoogleAuth}
-      /> */}
       </SafeAreaView>
     </TouchableWithoutFeedback>
   );

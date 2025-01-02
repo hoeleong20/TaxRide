@@ -12,7 +12,6 @@ import {
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
 import ButtonC from "../components/ButtonC";
-import TextInputC from "../components/TextInputC";
 import BackButtonC from "../components/BackButtonC";
 import FileC from "../components/FileC";
 import FileScreenTitleC from "../components/FileScreenTitleC";
