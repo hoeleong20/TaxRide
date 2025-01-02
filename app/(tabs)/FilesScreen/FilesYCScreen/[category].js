@@ -27,6 +27,9 @@ import DropDownPicker from "react-native-dropdown-picker";
 import axios from "axios";
 import { BASE_URL } from "@env";
 
+import * as FileSystem from "expo-file-system";
+import * as MediaLibrary from "expo-media-library";
+
 export default function FilesYCScreen() {
   const { structuredData } = useContext(FilesContext);
   const { refreshFiles } = useContext(FilesContext);
@@ -140,6 +143,85 @@ export default function FilesYCScreen() {
     });
   }, []);
 
+  const downloadFile = async (fileUri, fileName) => {
+    try {
+      console.log("Original File Name:", fileName);
+
+      // Sanitize file name to prevent directory issues
+      const sanitizedFileName = fileName.replace(/[^\w.-]/g, "_");
+      console.log("Sanitized File Name:", sanitizedFileName);
+
+      // Define the file path
+      const directoryPath = `${FileSystem.documentDirectory}downloads/`;
+      const filePath = `${directoryPath}${sanitizedFileName}`;
+      console.log("Download Path:", filePath);
+
+      // Ensure the directory exists
+      const dirInfo = await FileSystem.getInfoAsync(directoryPath);
+      if (!dirInfo.exists) {
+        await FileSystem.makeDirectoryAsync(directoryPath, {
+          intermediates: true,
+        });
+        console.log("Created Directory:", directoryPath);
+      }
+
+      // Request permissions
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("Permission Denied", "Storage permission is required.");
+        return;
+      }
+
+      // Download the file
+      console.log(`Downloading from ${fileUri} to ${filePath}`);
+      const downloadResult = await FileSystem.downloadAsync(fileUri, filePath);
+
+      // console.log("Download Result:", downloadResult);
+
+      // Extract MIME type from headers
+      const mimeType = downloadResult.headers["content-type"];
+      console.log("MIME Type:", mimeType);
+
+      // Map MIME type to file extension
+      const mimeToExtension = {
+        "image/jpeg": ".jpg",
+        "image/png": ".png",
+        "application/pdf": ".pdf",
+        "text/plain": ".txt",
+        // Add other MIME types as needed
+      };
+
+      const extension = mimeToExtension[mimeType];
+      if (!extension) {
+        throw new Error("Could not get the file's extension.");
+      }
+
+      // Rename the file with the correct extension
+      const finalFilePath = `${filePath}${extension}`;
+      await FileSystem.moveAsync({
+        from: downloadResult.uri,
+        to: finalFilePath,
+      });
+
+      console.log("Final File Path:", finalFilePath);
+
+      // Save to MediaLibrary
+      const asset = await MediaLibrary.createAssetAsync(finalFilePath);
+      await MediaLibrary.createAlbumAsync("TaxRide", asset, false);
+
+      Alert.alert(
+        "Download Success",
+        `${sanitizedFileName}${extension} has been downloaded.`
+      );
+    } catch (error) {
+      console.error("Download Error:", error.message || error);
+      Alert.alert(
+        "Error",
+        `Failed to download the file: ${error.message || error}`
+      );
+    }
+  };
+
   return (
     <TouchableWithoutFeedback
       onPress={() => {
@@ -159,15 +241,8 @@ export default function FilesYCScreen() {
                 >
                   <FileC
                     fileName={file.fileName}
-                    fileDate={formatDate(file.modifiedTime)} // Format date
-                    fileSize={formatSize(file.size)} // Format size
-                    // onEdit={() => console.log("Edit clicked for", file.fileName)}
-                    // onDownload={() =>
-                    //   console.log("Download clicked for", file.fileName)
-                    // }
-                    // onDelete={() =>
-                    //   console.log("Delete clicked for", file.fileName)
-                    // }
+                    fileDate={formatDate(file.modifiedTime)}
+                    fileSize={formatSize(file.size)}
                     onMenuPress={(x, y) => handleMenuPress(file.id, x, y)} // Pass position for dropdown
                   />
                 </Pressable>
@@ -194,13 +269,14 @@ export default function FilesYCScreen() {
               <Pressable
                 style={styles.menuItem}
                 onPress={() => {
-                  Alert.alert("Download File", "Downloading file...");
+                  const file = files.find((f) => f.id === activeDropdown);
+                  downloadFile(file.directLink, file.fileName);
                 }}
               >
                 <Text style={styles.menuText}>Download</Text>
               </Pressable>
               <Pressable
-                style={styles.menuItem}
+                style={styles.lastMenuItem}
                 onPress={() => {
                   setDeleteDialogVisible(true);
                 }}
