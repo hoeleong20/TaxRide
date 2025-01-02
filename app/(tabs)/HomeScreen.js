@@ -307,7 +307,7 @@ export default function HomeScreen() {
                 </View>
               </View>
               <View>
-                {recentFiles.map((file) => (
+                {recentFiles.map((file, index) => (
                   <Pressable
                     key={file.id}
                     onPress={() =>
@@ -322,7 +322,11 @@ export default function HomeScreen() {
                       )}
                       fileSize={`${Math.round(file.size / 1024)} KB`} // Convert size to KB
                       onMenuPress={(x, y) =>
-                        handleMenuPress(file.id, x - wp(4), y - hp(3))
+                        handleMenuPress(
+                          file.id,
+                          x - wp(4),
+                          index === 1 ? y - hp(25) : y - hp(3) // Adjust y position for the second file
+                        )
                       }
                     />
                   </Pressable>
