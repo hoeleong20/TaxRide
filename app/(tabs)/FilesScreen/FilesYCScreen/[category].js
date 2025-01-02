@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect, useCallback } from "react";
 import { FilesContext } from "../../../FilesContext";
 import { useLocalSearchParams } from "expo-router";
 
@@ -22,9 +22,14 @@ import {
 import FileC from "../../../../components/FileC";
 import FileScreenTitleC from "../../../../components/FileScreenTitleC";
 import ImagePreviewC from "../../../../components/ImagePreviewC";
+import Dialog from "react-native-dialog";
+import DropDownPicker from "react-native-dropdown-picker";
+import axios from "axios";
+import { BASE_URL } from "@env";
 
 export default function FilesYCScreen() {
   const { structuredData } = useContext(FilesContext);
+  const { refreshFiles } = useContext(FilesContext);
   const { years } = structuredData;
   const { year, category } = useLocalSearchParams();
 
@@ -33,7 +38,24 @@ export default function FilesYCScreen() {
   const [imageName, setImageName] = useState("");
 
   const [activeDropdown, setActiveDropdown] = useState("");
-  const [dropdownPosition, setDropdownPosition] = useState({ x: 0, y: 0 }); // Dropdown position
+  const [dropdownPosition, setDropdownPosition] = useState({ x: 0, y: 0 });
+
+  const [editDialogVisible, setEditDialogVisible] = useState(false);
+  const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
+  const [editedYear, setEditedYear] = useState(year);
+  const [editedCategory, setEditedCategory] = useState(category);
+  const [editedFilename, setEditedFilename] = useState("");
+
+  const [openYear, setOpenYear] = useState(false);
+  const [openCategory, setOpenCategory] = useState(false);
+
+  const onYearOpen = useCallback(() => {
+    setOpenCategory(false);
+  }, []);
+
+  const onCategoryOpen = useCallback(() => {
+    setOpenYear(false);
+  }, []);
 
   if (!year || !category || !years[year]?.[category]) {
     return <Text>Files not found for the selected year and category.</Text>;
@@ -69,6 +91,54 @@ export default function FilesYCScreen() {
     if (!sizeInBytes) return "--";
     return `${Math.round(sizeInBytes / 1024)} KB`; // Convert to KB and round off
   };
+
+  const handleEditSubmit = async (fileId) => {
+    try {
+      console.log(fileId);
+      const response = await axios.patch(`${BASE_URL}/edit-file`, {
+        fileId,
+        year: editedYear,
+        category: editedCategory,
+        filename: editedFilename,
+      });
+
+      Alert.alert("Success", response.data.message);
+      setEditDialogVisible(false);
+      setActiveDropdown(null);
+      refreshFiles();
+    } catch (error) {
+      console.error("Error updating file:", error);
+      Alert.alert("Error", "Failed to update file details.");
+    }
+  };
+
+  const handleDeleteFile = async (fileId) => {
+    try {
+      const response = await axios.delete(`${BASE_URL}/delete-file/${fileId}`);
+      Alert.alert("Success", response.data.message);
+      setDeleteDialogVisible(false);
+      setActiveDropdown(null);
+      refreshFiles();
+    } catch (error) {
+      console.error("Error deleting file:", error);
+      Alert.alert("Error", "Failed to delete file.");
+    }
+  };
+
+  const [yearsOption, setYearsOption] = useState([]);
+  const [categoriesOption, setCategoriesOption] = useState([]);
+
+  useEffect(() => {
+    // Fetch years
+    axios.get(`${BASE_URL}/years`).then((response) => {
+      setYearsOption(response.data);
+    });
+
+    // Fetch categories
+    axios.get(`${BASE_URL}/categories`).then((response) => {
+      setCategoriesOption(response.data);
+    });
+  }, []);
 
   return (
     <TouchableWithoutFeedback
@@ -116,8 +186,7 @@ export default function FilesYCScreen() {
               <Pressable
                 style={styles.menuItem}
                 onPress={() => {
-                  setActiveDropdown(null);
-                  Alert.alert("Edit File", "Editing file...");
+                  setEditDialogVisible(true);
                 }}
               >
                 <Text style={styles.menuText}>Edit</Text>
@@ -125,23 +194,108 @@ export default function FilesYCScreen() {
               <Pressable
                 style={styles.menuItem}
                 onPress={() => {
-                  setActiveDropdown(null);
                   Alert.alert("Download File", "Downloading file...");
                 }}
               >
                 <Text style={styles.menuText}>Download</Text>
               </Pressable>
               <Pressable
-                style={styles.lastMenuItem}
+                style={styles.menuItem}
                 onPress={() => {
-                  setActiveDropdown(null);
-                  Alert.alert("Delete File", "Deleting file...");
+                  setDeleteDialogVisible(true);
                 }}
               >
                 <Text style={styles.menuText}>Delete</Text>
               </Pressable>
             </View>
           )}
+
+          {/* Edit Dialog */}
+          <Dialog.Container visible={editDialogVisible}>
+            <Dialog.Title>Edit File</Dialog.Title>
+            <DropDownPicker
+              open={openYear}
+              onOpen={onYearOpen}
+              value={editedYear} // Current value is the default
+              items={[
+                { label: editedYear, value: editedYear }, // Add current value explicitly as the first item
+                ...yearsOption.filter((yr) => yr.value !== editedYear), // Append the rest, excluding the current value
+              ]}
+              setOpen={setOpenYear}
+              setValue={setEditedYear}
+              placeholder="Select Year"
+              style={{
+                marginBottom: 15,
+                borderWidth: 1,
+                borderColor: "#ccc",
+              }}
+              dropDownContainerStyle={{
+                maxHeight: 120, // Restrict height to allow scrolling
+                borderWidth: 1,
+                borderColor: "#ccc",
+                zIndex: 3000, // Ensure it appears above other elements
+              }}
+              zIndex={2000} // Ensure dropdown is above other elements
+              zIndexInverse={1000} // Prevent overlap with other components
+            />
+            <DropDownPicker
+              open={openCategory}
+              onOpen={onCategoryOpen}
+              value={editedCategory} // Current value is the default
+              items={[
+                { label: editedCategory, value: editedCategory }, // Add current value explicitly as the first item
+                ...categoriesOption.filter(
+                  (cat) => cat.value !== editedCategory
+                ), // Append the rest, excluding the current value
+              ]}
+              setOpen={setOpenCategory}
+              setValue={setEditedCategory}
+              placeholder="Select Category"
+              style={{
+                marginBottom: 15,
+                borderWidth: 1,
+                borderColor: "#ccc",
+              }}
+              dropDownContainerStyle={{
+                maxHeight: 120, // Restrict height to allow scrolling
+                borderWidth: 1,
+                borderColor: "#ccc",
+                zIndex: 3000, // Ensure it appears above other elements
+              }}
+              zIndex={2000} // Ensure dropdown is above other elements
+              zIndexInverse={1000} // Prevent overlap with other components
+            />
+            <Dialog.Input
+              placeholder="File Name"
+              value={editedFilename}
+              onChangeText={setEditedFilename}
+            />
+            <Dialog.Button
+              label="Cancel"
+              onPress={() => setEditDialogVisible(false)}
+            />
+            <Dialog.Button
+              label="Submit"
+              onPress={() => handleEditSubmit(activeDropdown)}
+            />
+          </Dialog.Container>
+
+          {/* Delete Dialog */}
+          <Dialog.Container visible={deleteDialogVisible}>
+            <Dialog.Title>Delete File</Dialog.Title>
+            <Dialog.Description>
+              Are you sure you want to delete this file? This action cannot be
+              undone.
+            </Dialog.Description>
+            <Dialog.Button
+              label="No"
+              onPress={() => setDeleteDialogVisible(false)}
+            />
+            <Dialog.Button
+              label="Yes"
+              onPress={() => handleDeleteFile(activeDropdown)}
+            />
+          </Dialog.Container>
 
           {imageUri && (
             <ImagePreviewC
