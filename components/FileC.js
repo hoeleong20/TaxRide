@@ -60,6 +60,7 @@ const styles = StyleSheet.create({
     borderRadius: wp(6),
     alignItems: "center",
     backgroundColor: "#FFFFFF",
+    height: hp(10),
   },
   rowStyle: {
     flexDirection: "row",

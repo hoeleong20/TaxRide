@@ -2,7 +2,14 @@ import React, { useContext } from "react";
 import { FilesContext } from "../../../FilesContext";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
-import { Text, View, StyleSheet, StatusBar, SafeAreaView } from "react-native";
+import {
+  Text,
+  View,
+  StyleSheet,
+  StatusBar,
+  SafeAreaView,
+  ScrollView,
+} from "react-native";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -19,24 +26,26 @@ export default function FilesYScreen() {
   if (!year || !years[year]) return <Text>Year not found.</Text>;
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View>
-        <FileScreenTitleC screenTitleText={year} />
+    <SafeAreaView>
+      <ScrollView style={styles.container}>
         <View>
-          {Object.keys(years[year]).map((category) => (
-            <FolderC
-              key={category}
-              folderName={category}
-              onPress={() =>
-                router.push({
-                  pathname: `../FilesYCScreen/${category}`,
-                  params: { year },
-                })
-              }
-            />
-          ))}
+          <FileScreenTitleC screenTitleText={year} />
+          <View>
+            {Object.keys(years[year]).map((category) => (
+              <FolderC
+                key={category}
+                folderName={category}
+                onPress={() =>
+                  router.push({
+                    pathname: `../FilesYCScreen/${category}`,
+                    params: { year },
+                  })
+                }
+              />
+            ))}
+          </View>
         </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
