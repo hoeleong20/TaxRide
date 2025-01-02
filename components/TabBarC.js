@@ -36,6 +36,14 @@ export default function TabBarC({ state, descriptors, navigation }) {
   const [openYear, setOpenYear] = useState(false);
   const [openCategory, setOpenCategory] = useState(false);
 
+  const onYearOpen = useCallback(() => {
+    setOpenCategory(false);
+  }, []);
+
+  const onCategoryOpen = useCallback(() => {
+    setOpenYear(false);
+  }, []);
+
   useEffect(() => {
     // Fetch years
     axios.get(`${BASE_URL}/years`).then((response) => {
@@ -446,6 +454,7 @@ export default function TabBarC({ state, descriptors, navigation }) {
               {/* Dropdown for Year */}
               <DropDownPicker
                 open={openYear}
+                onOpen={onYearOpen}
                 value={year}
                 items={years}
                 setOpen={setOpenYear}
@@ -471,6 +480,7 @@ export default function TabBarC({ state, descriptors, navigation }) {
               {/* Dropdown for Category */}
               <DropDownPicker
                 open={openCategory}
+                onOpen={onCategoryOpen}
                 value={category}
                 items={categories}
                 setOpen={setOpenCategory}

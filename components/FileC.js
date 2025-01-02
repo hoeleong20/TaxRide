@@ -1,13 +1,30 @@
-import { Text, View, StyleSheet, Pressable } from "react-native";
+import {
+  Text,
+  View,
+  StyleSheet,
+  Pressable,
+  TouchableOpacity,
+} from "react-native";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
 import Icon from "react-native-vector-icons/Ionicons";
+import { useState, useRef } from "react";
 
-export default function FileC({ fileName, fileDate, fileSize }) {
+export default function FileC({ fileName, fileDate, fileSize, onMenuPress }) {
+  const pressableRef = useRef(null);
+
+  const handlePress = () => {
+    if (pressableRef.current) {
+      pressableRef.current.measure((fx, fy, width, height, px, py) => {
+        onMenuPress(px - wp(20), py + height); // Pass absolute x, y position for dropdown
+      });
+    }
+  };
+
   return (
-    <View>
+    <View style={styles.container}>
       <View style={styles.rowContainer}>
         <View>
           <View style={styles.rowStyle}>
@@ -20,13 +37,18 @@ export default function FileC({ fileName, fileDate, fileSize }) {
             </View>
           </View>
         </View>
-        <Icon name="ellipsis-vertical" size={wp(9)} />
+        <Pressable ref={pressableRef} onPress={handlePress}>
+          <Icon name="ellipsis-vertical" size={wp(9)} />
+        </Pressable>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    position: "relative", // Ensure dropdown aligns relative to the parent
+  },
   rowContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
