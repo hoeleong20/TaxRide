@@ -19,7 +19,7 @@ import {
 import ButtonC from "../components/ButtonC";
 import TextInputC from "../components/TextInputC";
 import BackButtonC from "../components/BackButtonC";
-import { Link } from "expo-router";
+import { Link, router } from "expo-router";
 
 const logoImg = require("../assets/taxride_logo.png");
 import { BASE_URL } from "@env";
@@ -87,10 +87,7 @@ export default function SignUpScreen() {
 
       const data = await response.json();
       if (response.ok) {
-        Alert.alert(
-          "Success",
-          "Registration Submitted! Please check your email to verify your account."
-        );
+        router.push("/RegisterSuccessScreen");
       } else {
         Alert.alert("Error", data.message || "Signup failed");
       }
