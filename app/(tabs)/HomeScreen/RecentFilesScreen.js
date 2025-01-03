@@ -1,23 +1,41 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Text, View, StyleSheet, FlatList } from "react-native";
+import {
+  Text,
+  View,
+  StyleSheet,
+  FlatList,
+  Modal,
+  SafeAreaView,
+  Pressable,
+} from "react-native";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
 import FileC from "../../../components/FileC";
 import FileScreenTitleC from "../../../components/FileScreenTitleC";
+import ImagePreviewC from "../../../components/ImagePreviewC";
 import { FilesContext } from "../../FilesContext";
 
 export default function RecentFilesScreen() {
   const { structuredData } = useContext(FilesContext); // Access structuredData
   const [filesLast30Days, setFilesLast30Days] = useState([]);
 
+  // Image Preview State
+  const [modalVisible, setModalVisible] = useState(false);
+  const [imageUri, setImageUri] = useState("");
+  const [imageName, setImageName] = useState("");
+  const [fileYear, setFileYear] = useState("");
+  const [fileCategory, setFileCategory] = useState("");
+
   useEffect(() => {
     if (structuredData.years) {
       // Flatten files from structuredData
       const allFiles = Object.entries(structuredData.years).flatMap(
         ([year, categories]) =>
-          Object.values(categories).flatMap((files) => files)
+          Object.entries(categories).flatMap(([category, files]) => {
+            return files.map((file) => ({ ...file, year, category }));
+          })
       );
 
       // Calculate the date 30 days ago
@@ -40,6 +58,14 @@ export default function RecentFilesScreen() {
     }
   }, [structuredData]);
 
+  const openImagePreview = (file) => {
+    setImageUri(file.directLink);
+    setImageName(file.fileName);
+    setFileYear(file.year);
+    setFileCategory(file.category);
+    setModalVisible(true);
+  };
+
   return (
     <View style={styles.container}>
       <FileScreenTitleC screenTitleText={"Recent Files"} />
@@ -49,24 +75,37 @@ export default function RecentFilesScreen() {
           data={filesLast30Days}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <FileC
-              fileName={item.fileName}
-              fileDate={new Date(item.modifiedTime).toLocaleDateString(
-                "en-GB",
-                {
-                  day: "2-digit",
-                  month: "short",
-                  year: "numeric",
-                }
-              )}
-              fileSize={`${Math.round(item.size / 1024)} KB`} // Convert size to KB
-            />
+            <Pressable onPress={() => openImagePreview(item)}>
+              <FileC
+                fileName={item.fileName}
+                fileDate={new Date(item.modifiedTime).toLocaleDateString(
+                  "en-GB",
+                  {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                  }
+                )}
+                fileSize={`${Math.round(item.size / 1024)} KB`} // Convert size to KB
+              />
+            </Pressable>
           )}
         />
       ) : (
         <Text style={styles.noFilesText}>
           No files modified in the last 30 days.
         </Text>
+      )}
+
+      {modalVisible && (
+        <ImagePreviewC
+          modalVisible={modalVisible}
+          setModalVisible={setModalVisible}
+          imageUri={imageUri}
+          imageName={imageName}
+          fileYear={fileYear}
+          fileCategory={fileCategory}
+        />
       )}
     </View>
   );

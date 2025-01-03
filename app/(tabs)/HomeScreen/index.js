@@ -131,17 +131,22 @@ export default function HomeScreen() {
     fetchInternalStorage();
   }, []);
 
-  const openFile = (imageName, fileUri) => {
+  const openFile = (file) => {
+    const [year, category, ...rest] = file.name.split("-");
+    setEditedYear(year); // Extract and set year
+    setEditedCategory(category); // Extract and set category
+    setImageUri(file.directLink);
+    setImageName(rest.join("-")); // Set only the filename
     setModalVisible(true);
-    setImageName(imageName);
-    setImageUri(fileUri);
+
     setActiveDropdown(null);
   };
 
   // Extract filename without year and category
   const extractFileName = (fullName) => {
     const parts = fullName.split("-");
-    return parts.slice(2).join("-"); // Skip the year and category
+    const nameWithoutYearAndCategory = parts.slice(2).join("-"); // Skip the year and category
+    return nameWithoutYearAndCategory.replace(/\.[^/.]+$/, ""); // Remove the file extension
   };
 
   // Fetch recent files
@@ -363,17 +368,16 @@ export default function HomeScreen() {
               </View>
               <View>
                 {recentFiles.map((file, index) => (
-                  <Pressable
-                    key={file.id}
-                    onPress={() =>
-                      openFile(extractFileName(file.name), file.directLink)
-                    }
-                  >
+                  <Pressable key={file.id} onPress={() => openFile(file)}>
                     <FileC
                       fileName={extractFileName(file.name)}
                       fileDate={new Date(file.modifiedTime).toLocaleDateString(
                         "en-GB",
-                        { day: "2-digit", month: "short", year: "numeric" }
+                        {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        }
                       )}
                       fileSize={`${Math.round(file.size / 1024)} KB`} // Convert size to KB
                       onMenuPress={(x, y) =>
@@ -395,6 +399,9 @@ export default function HomeScreen() {
               setModalVisible={setModalVisible}
               imageUri={imageUri}
               imageName={imageName}
+              fileId={activeDropdown}
+              fileYear={editedYear}
+              fileCategory={editedCategory}
             />
           )}
           {activeDropdown && (
