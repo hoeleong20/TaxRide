@@ -25,10 +25,10 @@ const logoImg = require("../assets/taxride_logo.png");
 import { BASE_URL } from "@env";
 
 export default function SignUpScreen() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [cfmPassword, setCfmPassword] = useState("");
+  const [name, setName] = useState("test");
+  const [email, setEmail] = useState("chewhl2002@gmail.com");
+  const [password, setPassword] = useState("Pass123.");
+  const [cfmPassword, setCfmPassword] = useState("Pass123.");
   const [tooltip, setTooltip] = useState({}); // Object to store validation messages
 
   const validateField = (fieldName, value) => {
@@ -77,19 +77,25 @@ export default function SignUpScreen() {
       Alert.alert("Error", "Passwords do not match");
       return;
     }
+
     try {
       const response = await fetch(`${BASE_URL}/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password }),
       });
+
       const data = await response.json();
       if (response.ok) {
-        Alert.alert("Success", "Account created successfully!");
+        Alert.alert(
+          "Success",
+          "Registration Submitted! Please check your email to verify your account."
+        );
       } else {
         Alert.alert("Error", data.message || "Signup failed");
       }
     } catch (error) {
+      console.error("Error:", error);
       Alert.alert("Error", "Something went wrong. Please try again later.");
     }
   };
