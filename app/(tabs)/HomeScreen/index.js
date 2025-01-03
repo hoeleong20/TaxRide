@@ -36,7 +36,8 @@ import axios from "axios";
 
 export default function HomeScreen() {
   const [name, setName] = useState("Ayush Srivastava");
-  const [cloudStoragePerc, setCloudStoragePerc] = useState(37);
+  const [cloudStoragePerc, setCloudStoragePerc] = useState(0);
+  const [cloudStorageText, setCloudStorageText] = useState("Loading...");
   const [internalStoragePerc, setInternalStoragePerc] = useState(66);
   const [imageName, setImageName] = useState("");
   const [recentFiles, setRecentFiles] = useState([]);
@@ -77,6 +78,31 @@ export default function HomeScreen() {
     axios.get(`${BASE_URL}/categories`).then((response) => {
       setCategoriesOption(response.data);
     });
+  }, []);
+
+  useEffect(() => {
+    const fetchCloudStorage = async () => {
+      try {
+        const response = await axios.get(`${BASE_URL}/drive/storage`);
+        const { used, total } = response.data;
+
+        const percentageUsed = Math.floor((used / total) * 100);
+
+        // Update state for cloud storage
+        setCloudStoragePerc(percentageUsed);
+
+        // Format values for display (e.g., GB or TB)
+        const usedGB = (used / 1024 ** 3).toFixed(2); // Convert bytes to GB
+        const totalGB = total / 1024 ** 3; // Convert bytes to GB
+
+        setCloudStorageText(`${usedGB} GB of ${totalGB} GB used`);
+      } catch (error) {
+        console.error("Error fetching cloud storage:", error.message);
+        Alert.alert("Error", "Failed to load cloud storage data.");
+      }
+    };
+
+    fetchCloudStorage();
   }, []);
 
   const openFile = (imageName, fileUri) => {
@@ -281,7 +307,7 @@ export default function HomeScreen() {
                 <View style={styles.StorageUsageText}>
                   <Text style={styles.StorageUsageText1}>Cloud Storage</Text>
                   <Text style={styles.StorageUsageText2}>
-                    131 GB of 2 TB used
+                    {cloudStorageText}
                   </Text>
                 </View>
               </View>
