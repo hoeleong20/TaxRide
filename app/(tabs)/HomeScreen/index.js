@@ -38,7 +38,8 @@ export default function HomeScreen() {
   const [name, setName] = useState("Ayush Srivastava");
   const [cloudStoragePerc, setCloudStoragePerc] = useState(0);
   const [cloudStorageText, setCloudStorageText] = useState("Loading...");
-  const [internalStoragePerc, setInternalStoragePerc] = useState(66);
+  const [internalStoragePerc, setInternalStoragePerc] = useState(0);
+  const [internalStorageText, setInternalStorageText] = useState("Loading...");
   const [imageName, setImageName] = useState("");
   const [recentFiles, setRecentFiles] = useState([]);
 
@@ -103,6 +104,31 @@ export default function HomeScreen() {
     };
 
     fetchCloudStorage();
+  }, []);
+
+  useEffect(() => {
+    const fetchInternalStorage = async () => {
+      try {
+        const storageInfo = await FileSystem.getFreeDiskStorageAsync();
+        const totalStorage = await FileSystem.getTotalDiskCapacityAsync();
+
+        const usedStorage = totalStorage - storageInfo;
+        const percentageUsed = Math.round((usedStorage / totalStorage) * 100);
+
+        setInternalStoragePerc(percentageUsed);
+
+        // Format for human-readable text
+        const usedGB = (usedStorage / 1024 ** 3).toFixed(2);
+        const totalGB = (totalStorage / 1024 ** 3).toFixed(2);
+
+        setInternalStorageText(`${usedGB} GB of ${totalGB} GB used`);
+      } catch (error) {
+        console.error("Error fetching internal storage:", error.message);
+        Alert.alert("Error", "Failed to load internal storage data.");
+      }
+    };
+
+    fetchInternalStorage();
   }, []);
 
   const openFile = (imageName, fileUri) => {
@@ -316,7 +342,7 @@ export default function HomeScreen() {
                 <View style={styles.StorageUsageText}>
                   <Text style={styles.StorageUsageText1}>Internal Storage</Text>
                   <Text style={styles.StorageUsageText2}>
-                    85 GB of 128 GB used
+                    {internalStorageText}
                   </Text>
                 </View>
               </View>
