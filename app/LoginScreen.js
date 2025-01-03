@@ -28,6 +28,21 @@ export default function LoginScreen() {
   const [email, setEmail] = useState("hoeleongjob01@gmail.com");
   const [password, setPassword] = useState("pass1234.");
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const [tooltip, setTooltip] = useState({}); // Object to store validation messages
+
+  const validateField = (fieldName, value) => {
+    const newTooltip = { ...tooltip };
+
+    if (fieldName === "email") {
+      if (!/\S+@\S+\.\S+/.test(value)) {
+        newTooltip.email = "Please enter a valid email address";
+      } else {
+        newTooltip.email = null;
+      }
+    }
+
+    setTooltip(newTooltip);
+  };
 
   const handleLogin = async () => {
     try {
@@ -59,12 +74,20 @@ export default function LoginScreen() {
               <Image source={logoImg} style={styles.logoImgStyle} />
             </View>
             <Text style={styles.titleText}>Welcome Back</Text>
-            <TextInputC
-              placeholderText={"Enter your email"}
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address" // Explicitly set keyboard type
-            />
+
+            {/* Email Field */}
+            <View style={styles.inputContainer}>
+              <TextInputC
+                placeholderText={"Enter your email"}
+                value={email}
+                onChangeText={setEmail}
+                onBlur={() => validateField("email", email)}
+                keyboardType="email-address" // Explicitly set keyboard type
+              />
+              {tooltip.email && (
+                <Text style={styles.tooltip}>{tooltip.email}</Text>
+              )}
+            </View>
             <TextInputC
               placeholderText={"Enter your password"}
               value={password}
@@ -115,4 +138,13 @@ const styles = StyleSheet.create({
   altContainer: { flexDirection: "row", marginHorizontal: "auto" },
   altText1: { marginRight: wp(2) },
   altText2: { color: "#3E33D9", fontWeight: "600" },
+  inputContainer: {
+    minHeight: hp(11.5), // Define a fixed height to include both input and tooltip
+  },
+  tooltip: {
+    fontSize: hp(1.5),
+    color: "red",
+    padding: 0,
+    marginBottom: hp(0.5),
+  },
 });

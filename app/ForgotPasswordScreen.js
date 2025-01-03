@@ -18,12 +18,28 @@ import {
 import ButtonC from "../components/ButtonC";
 import TextInputC from "../components/TextInputC";
 import BackButtonC from "../components/BackButtonC";
+import { router } from "expo-router";
 
-const logoImg = require("../assets/adaptive-icon.png");
+const logoImg = require("../assets/taxride_logo.png");
 import { BASE_URL } from "@env";
 
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState("chewhl2002@gmail.com");
+  const [tooltip, setTooltip] = useState({}); // Object to store validation messages
+
+  const validateField = (fieldName, value) => {
+    const newTooltip = { ...tooltip };
+
+    if (fieldName === "email") {
+      if (!/\S+@\S+\.\S+/.test(value)) {
+        newTooltip.email = "Please enter a valid email address";
+      } else {
+        newTooltip.email = null;
+      }
+    }
+
+    setTooltip(newTooltip);
+  };
 
   const handleForgotPassword = async () => {
     if (!email) {
@@ -40,7 +56,11 @@ export default function ForgotPasswordScreen() {
 
       const data = await response.json();
       if (response.ok) {
-        Alert.alert("Success", data.message || "Password reset email sent.");
+        Alert.alert(
+          "Success",
+          data.message || "Password reset email sent.",
+          [{ text: "OK", onPress: () => router.push("/LoginScreen") }] // Navigate to login after user presses OK
+        );
       } else {
         Alert.alert("Error", data.message || "Failed to send reset email.");
       }
@@ -62,11 +82,18 @@ export default function ForgotPasswordScreen() {
             <Image source={logoImg} style={styles.logoImgStyle} />
           </View>
           <Text style={styles.titleText}>Restore Password</Text>
-          <TextInputC
-            placeholderText={"Enter your email"}
-            value={email}
-            onChangeText={setEmail}
-          />
+          <View style={styles.inputContainer}>
+            <TextInputC
+              placeholderText={"Enter your email"}
+              value={email}
+              onChangeText={setEmail}
+              onBlur={() => validateField("email", email)}
+              keyboardType="email-address" // Explicitly set keyboard type
+            />
+            {tooltip.email && (
+              <Text style={styles.tooltip}>{tooltip.email}</Text>
+            )}
+          </View>
           <Text style={styles.descText}>
             You will receive an email with a password reset link.
           </Text>
@@ -115,5 +142,14 @@ const styles = StyleSheet.create({
   },
   loginText: {
     color: "white",
+  },
+  inputContainer: {
+    minHeight: hp(11.5), // Define a fixed height to include both input and tooltip
+  },
+  tooltip: {
+    fontSize: hp(1.5),
+    color: "red",
+    padding: 0,
+    marginBottom: hp(0.5),
   },
 });

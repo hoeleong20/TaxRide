@@ -1,17 +1,17 @@
+import React, { useState } from "react";
 import {
   Text,
   View,
   StyleSheet,
   Image,
-  StatusBar,
   SafeAreaView,
   Alert,
   KeyboardAvoidingView,
   ScrollView,
   TouchableWithoutFeedback,
   Keyboard,
+  StatusBar,
 } from "react-native";
-import { useState } from "react";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -29,6 +29,48 @@ export default function SignUpScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [cfmPassword, setCfmPassword] = useState("");
+  const [tooltip, setTooltip] = useState({}); // Object to store validation messages
+
+  const validateField = (fieldName, value) => {
+    const newTooltip = { ...tooltip };
+
+    if (fieldName === "name") {
+      if (value.length < 3) {
+        newTooltip.name = "Name must be at least 3 characters";
+      } else {
+        newTooltip.name = null;
+      }
+    }
+
+    if (fieldName === "email") {
+      if (!/\S+@\S+\.\S+/.test(value)) {
+        newTooltip.email = "Please enter a valid email address";
+      } else {
+        newTooltip.email = null;
+      }
+    }
+
+    if (fieldName === "password") {
+      const passwordPattern =
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#.])[A-Za-z\d@$!%*?&#.]{8,}$/;
+      if (!passwordPattern.test(value)) {
+        newTooltip.password =
+          "Password must include uppercase, lowercase, number, special character, and be at least 8 characters";
+      } else {
+        newTooltip.password = null;
+      }
+    }
+
+    if (fieldName === "cfmPassword") {
+      if (value !== password) {
+        newTooltip.cfmPassword = "Passwords do not match";
+      } else {
+        newTooltip.cfmPassword = null;
+      }
+    }
+
+    setTooltip(newTooltip);
+  };
 
   const handleSignUp = async () => {
     if (password !== cfmPassword) {
@@ -62,31 +104,59 @@ export default function SignUpScreen() {
               <Image source={logoImg} style={styles.logoImgStyle} />
             </View>
             <Text style={styles.titleText}>Create Account</Text>
-            <TextInputC
-              placeholderText={"Name"}
-              value={name}
-              onChangeText={setName}
-            />
-            <TextInputC
-              placeholderText={"Email"}
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-            />
-            <TextInputC
-              placeholderText={"Password"}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={true}
-              includeEyeIcon={true}
-            />
-            <TextInputC
-              placeholderText={"Confirm password"}
-              value={cfmPassword}
-              onChangeText={setCfmPassword}
-              secureTextEntry={true}
-              includeEyeIcon={true}
-            />
+            {/* Name Field */}
+            <View style={styles.inputContainer}>
+              <TextInputC
+                placeholderText="Name"
+                value={name}
+                onChangeText={setName}
+                onBlur={() => validateField("name", name)}
+              />
+              {tooltip.name && (
+                <Text style={styles.tooltip}>{tooltip.name}</Text>
+              )}
+            </View>
+            {/* Email Field */}
+            <View style={styles.inputContainer}>
+              <TextInputC
+                placeholderText="Email"
+                value={email}
+                onChangeText={setEmail}
+                onBlur={() => validateField("email", email)}
+                keyboardType="email-address"
+              />
+              {tooltip.email && (
+                <Text style={styles.tooltip}>{tooltip.email}</Text>
+              )}
+            </View>
+            {/* Password Field */}
+            <View style={styles.inputContainer}>
+              <TextInputC
+                placeholderText="Password"
+                value={password}
+                onChangeText={setPassword}
+                onBlur={() => validateField("password", password)}
+                secureTextEntry={true}
+                includeEyeIcon={true}
+              />
+              {tooltip.password && (
+                <Text style={styles.tooltip}>{tooltip.password}</Text>
+              )}
+            </View>
+            {/* Confirm Password Field */}
+            <View style={styles.inputContainer}>
+              <TextInputC
+                placeholderText="Confirm Password"
+                value={cfmPassword}
+                onChangeText={setCfmPassword}
+                onBlur={() => validateField("cfmPassword", cfmPassword)}
+                secureTextEntry={true}
+                includeEyeIcon={true}
+              />
+              {tooltip.cfmPassword && (
+                <Text style={styles.tooltip}>{tooltip.cfmPassword}</Text>
+              )}
+            </View>
             <ButtonC
               textContent="Sign Up"
               buttonStyle={styles.signUpButton}
@@ -113,7 +183,7 @@ const styles = StyleSheet.create({
     paddingTop: StatusBar.currentHeight,
   },
   logoContainer: { alignItems: "center" },
-  logoImgStyle: { width: hp(20), height: hp(20), margin: hp(2) },
+  logoImgStyle: { width: hp(18), height: hp(16), marginBottom: hp(2) },
   titleText: {
     fontSize: hp(3),
     fontWeight: "700",
@@ -123,10 +193,20 @@ const styles = StyleSheet.create({
   signUpButton: {
     backgroundColor: "#3E33D9",
     borderColor: "#3E33D9",
-    marginVertical: hp(3),
+    marginTop: hp(2),
+    marginBottom: hp(3),
   },
   signUpText: { color: "white" },
   altContainer: { flexDirection: "row", marginHorizontal: "auto" },
   altText1: { marginRight: wp(2) },
   altText2: { color: "#3E33D9", fontWeight: "600" },
+  inputContainer: {
+    minHeight: hp(11.5), // Define a fixed height to include both input and tooltip
+  },
+  tooltip: {
+    fontSize: hp(1.5),
+    color: "red",
+    padding: 0,
+    marginBottom: hp(0.5),
+  },
 });
