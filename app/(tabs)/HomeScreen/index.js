@@ -17,18 +17,19 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
-import NotificationButtonC from "../../components/NotificationButtonC";
-import StorageUsageBarC from "../../components/StorageUsageBarC";
+import NotificationButtonC from "../../../components/NotificationButtonC";
+import StorageUsageBarC from "../../../components/StorageUsageBarC";
 import Icon from "react-native-vector-icons/Ionicons";
-import FileC from "../../components/FileC";
-import ImagePreviewC from "../../components/ImagePreviewC";
+import FileC from "../../../components/FileC";
+import ImagePreviewC from "../../../components/ImagePreviewC";
 import Dialog from "react-native-dialog";
 import DropDownPicker from "react-native-dropdown-picker";
 import * as FileSystem from "expo-file-system";
 import * as MediaLibrary from "expo-media-library";
-import { FilesContext } from "../../app/FilesContext";
+import { FilesContext } from "../../FilesContext";
+import { Link } from "expo-router";
 
-const profileImage = require("../../assets/userProfile.jpg");
+const profileImage = require("../../../assets/userProfile.jpg");
 // const BASE_URL = "http://192.168.1.39:3000";
 import { BASE_URL } from "@env";
 import axios from "axios";
@@ -298,7 +299,9 @@ export default function HomeScreen() {
               <View style={styles.rowContainer}>
                 <Text style={styles.titleText}>Recent Files</Text>
                 <View style={styles.altContainer}>
-                  <Text style={styles.altText}>View More</Text>
+                  <Link href="/(tabs)/HomeScreen/RecentFilesScreen">
+                    <Text style={styles.altText}>View More</Text>
+                  </Link>
                   <Icon
                     name="arrow-forward-sharp"
                     size={wp(5)}
