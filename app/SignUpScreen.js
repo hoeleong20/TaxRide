@@ -25,7 +25,7 @@ const logoImg = require("../assets/taxride_logo.png");
 import { BASE_URL } from "@env";
 
 export default function SignUpScreen() {
-  const [name, setName] = useState("test");
+  const [name, setName] = useState("chew hoe leong");
   const [email, setEmail] = useState("chewhl2002@gmail.com");
   const [password, setPassword] = useState("Pass123.");
   const [cfmPassword, setCfmPassword] = useState("Pass123.");
@@ -73,8 +73,17 @@ export default function SignUpScreen() {
   };
 
   const handleSignUp = async () => {
-    if (password !== cfmPassword) {
-      Alert.alert("Error", "Passwords do not match");
+    validateField("name", name);
+    validateField("email", email);
+    validateField("password", password);
+    validateField("cfmPassword", cfmPassword);
+
+    if (
+      tooltip.name ||tooltip.email || tooltip.password || tooltip.cfmPassword
+    ) {
+      Alert.alert(
+        "Error","There exist invalid input field."
+      );
       return;
     }
 
@@ -197,7 +206,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#3E33D9",
     borderColor: "#3E33D9",
     marginTop: hp(2),
-    marginBottom: hp(3),
+    marginBottom: hp(2),
   },
   signUpText: { color: "white" },
   altContainer: { flexDirection: "row", marginHorizontal: "auto" },

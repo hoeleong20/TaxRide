@@ -268,6 +268,12 @@ export default function TabBarC({ state, descriptors, navigation }) {
       console.log("File uploaded successfully:", response.data);
       await refreshFiles();
 
+      Alert.alert(
+        "Upload Successful",
+        `Your image have been uploaded to Google Drive.`,
+        [{ text: "OK" }]
+      );
+
       // Reset states only after successful upload
       setImage("");
       setYear("");
@@ -309,7 +315,6 @@ export default function TabBarC({ state, descriptors, navigation }) {
   const retryLocalUploads = async () => {
     try {
       const localFiles = await AsyncStorage.getItem("localFiles");
-      console.log("localFiles:", localFiles);
       if (!localFiles) return;
 
       const files = JSON.parse(localFiles);

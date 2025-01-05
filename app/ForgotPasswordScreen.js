@@ -47,6 +47,13 @@ export default function ForgotPasswordScreen() {
       return;
     }
 
+    validateField("email", email);
+
+    if (tooltip.email) {
+      Alert.alert("Error", "The email is invalid.");
+      return;
+    }
+
     try {
       const response = await fetch(`${BASE_URL}/forgot-password`, {
         method: "POST",
@@ -56,11 +63,9 @@ export default function ForgotPasswordScreen() {
 
       const data = await response.json();
       if (response.ok) {
-        Alert.alert(
-          "Success",
-          data.message || "Password reset email sent.",
-          [{ text: "OK", onPress: () => router.push("/LoginScreen") }] // Navigate to login after user presses OK
-        );
+        Alert.alert("Success", data.message || "Password reset email sent.", [
+          { text: "OK", onPress: () => router.push("/LoginScreen") },
+        ]);
       } else {
         Alert.alert("Error", data.message || "Failed to send reset email.");
       }
