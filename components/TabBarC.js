@@ -291,6 +291,8 @@ export default function TabBarC({ state, descriptors, navigation }) {
           });
           await AsyncStorage.setItem("localFiles", JSON.stringify(localFiles));
 
+          await refreshFiles();
+
           // Alert the user about the issue and fallback
           Alert.alert(
             "Insufficient Storage",
@@ -311,6 +313,10 @@ export default function TabBarC({ state, descriptors, navigation }) {
       }
     }
   }, [image, year, category, filename]);
+
+  const handleCancelUploadImage = async () => {
+    Alert.alert("Upload Canceled", `The upload action has been canceled.`);
+  };
 
   const retryLocalUploads = async () => {
     try {
@@ -522,6 +528,7 @@ export default function TabBarC({ state, descriptors, navigation }) {
                   setYear("");
                   setCategory("");
                   setFilename("");
+                  handleCancelUploadImage();
                 }}
               />
               <Dialog.Button

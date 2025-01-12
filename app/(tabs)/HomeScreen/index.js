@@ -12,7 +12,7 @@ import {
   KeyboardAvoidingView,
   Keyboard,
 } from "react-native";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useContext } from "react";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -58,6 +58,9 @@ export default function HomeScreen() {
   const [openYear, setOpenYear] = useState(false);
   const [openCategory, setOpenCategory] = useState(false);
 
+  const { structuredData } = useContext(FilesContext);
+  const { refreshFiles } = useContext(FilesContext);
+
   const onYearOpen = useCallback(() => {
     setOpenCategory(false);
   }, []);
@@ -83,6 +86,7 @@ export default function HomeScreen() {
 
   useEffect(() => {
     const fetchCloudStorage = async () => {
+      await refreshFiles();
       try {
         const response = await axios.get(`${BASE_URL}/drive/storage`);
         const { used, total } = response.data;
@@ -150,7 +154,7 @@ export default function HomeScreen() {
   };
 
   // Fetch recent files
-  const fetchRecentFiles = useCallback(async () => {
+  const fetchRecentFiles = async () => {
     try {
       const response = await axios.get(`${BASE_URL}/files`);
       const files = response.data;
@@ -166,11 +170,11 @@ export default function HomeScreen() {
       console.error("Error fetching recent files:", error);
       Alert.alert("Error", "Failed to load recent files.");
     }
-  }, []);
+  };
 
   useEffect(() => {
     fetchRecentFiles();
-  }, [fetchRecentFiles]);
+  }, [structuredData]);
 
   const handleMenuPress = (fileId, x, y) => {
     setDropdownPosition({ x, y });
@@ -206,6 +210,7 @@ export default function HomeScreen() {
       setEditDialogVisible(false);
       setActiveDropdown(null);
       fetchRecentFiles();
+      await refreshFiles();
     } catch (error) {
       console.error("Error updating file:", error);
       Alert.alert("Error", "Failed to update file details.");
@@ -222,81 +227,117 @@ export default function HomeScreen() {
       setDeleteDialogVisible(false);
       setActiveDropdown(null);
       fetchRecentFiles();
+      await refreshFiles();
     } catch (error) {
       console.error("Error deleting file:", error);
       Alert.alert("Error", "Failed to delete file.");
     }
   };
 
+  const handleCancelDeleteFile = async () => {
+    Alert.alert(
+      "Deletion Canceled",
+      `The deletion of "${activeDropdown}" has been canceled.`
+    );
+  };
+
   const downloadFile = async (fileUri, fileName) => {
     try {
       console.log("Original File Name:", fileName);
 
-      // Sanitize file name to prevent directory issues
-      const sanitizedFileName = fileName.replace(/[^\w.-]/g, "_");
+      // Extract the actual file name (removing year and category)
+      const parts = fileName.split("-");
+      const sanitizedFileName = parts.slice(2).join("-"); // Skip the first two parts (year and category)
       console.log("Sanitized File Name:", sanitizedFileName);
 
-      // Define the file path
-      const directoryPath = `${FileSystem.documentDirectory}downloads/`;
-      const filePath = `${directoryPath}${sanitizedFileName}`;
-      console.log("Download Path:", filePath);
-
-      // Ensure the directory exists
-      const dirInfo = await FileSystem.getInfoAsync(directoryPath);
-      if (!dirInfo.exists) {
-        await FileSystem.makeDirectoryAsync(directoryPath, {
-          intermediates: true,
-        });
-        console.log("Created Directory:", directoryPath);
-      }
-
-      // Request permissions
-      const { status } = await MediaLibrary.requestPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert("Permission Denied", "Storage permission is required.");
-        return;
-      }
-
-      // Download the file
-      console.log(`Downloading from ${fileUri} to ${filePath}`);
-      const downloadResult = await FileSystem.downloadAsync(fileUri, filePath);
-
-      // console.log("Download Result:", downloadResult);
-
-      // Extract MIME type from headers
-      const mimeType = downloadResult.headers["content-type"];
-      console.log("MIME Type:", mimeType);
-
-      // Map MIME type to file extension
-      const mimeToExtension = {
-        "image/jpeg": ".jpg",
-        "image/png": ".png",
-        "application/pdf": ".pdf",
-        "text/plain": ".txt",
-        // Add other MIME types as needed
-      };
-
-      const extension = mimeToExtension[mimeType];
-      if (!extension) {
-        throw new Error("Could not get the file's extension.");
-      }
-
-      // Rename the file with the correct extension
-      const finalFilePath = `${filePath}${extension}`;
-      await FileSystem.moveAsync({
-        from: downloadResult.uri,
-        to: finalFilePath,
-      });
-
-      console.log("Final File Path:", finalFilePath);
-
-      // Save to MediaLibrary
-      const asset = await MediaLibrary.createAssetAsync(finalFilePath);
-      await MediaLibrary.createAlbumAsync("TaxRide", asset, false);
-
+      // Alert user to confirm download
       Alert.alert(
-        "Download Success",
-        `${sanitizedFileName}${extension} has been downloaded.`
+        "Download Confirmation",
+        `Do you want to download "${sanitizedFileName}"?`,
+        [
+          {
+            text: "Cancel",
+            onPress: () => {
+              console.log("Download canceled");
+              Alert.alert(
+                "Download Canceled",
+                `The download of "${sanitizedFileName}" has been canceled.`
+              );
+            },
+            style: "cancel", // Sets style for the button
+          },
+          {
+            text: "Download",
+            onPress: async () => {
+              // Define the file path
+              const directoryPath = `${FileSystem.documentDirectory}downloads/`;
+              const filePath = `${directoryPath}${sanitizedFileName}`;
+              console.log("Download Path:", filePath);
+
+              // Ensure the directory exists
+              const dirInfo = await FileSystem.getInfoAsync(directoryPath);
+              if (!dirInfo.exists) {
+                await FileSystem.makeDirectoryAsync(directoryPath, {
+                  intermediates: true,
+                });
+                console.log("Created Directory:", directoryPath);
+              }
+
+              // Request permissions
+              const { status } = await MediaLibrary.requestPermissionsAsync();
+              if (status !== "granted") {
+                Alert.alert(
+                  "Permission Denied",
+                  "Storage permission is required."
+                );
+                return;
+              }
+
+              // Download the file
+              console.log(`Downloading from ${fileUri} to ${filePath}`);
+              const downloadResult = await FileSystem.downloadAsync(
+                fileUri,
+                filePath
+              );
+
+              // Extract MIME type from headers
+              const mimeType = downloadResult.headers["content-type"];
+              console.log("MIME Type:", mimeType);
+
+              // Map MIME type to file extension
+              const mimeToExtension = {
+                "image/jpeg": ".jpg",
+                "image/png": ".png",
+                "application/pdf": ".pdf",
+                "text/plain": ".txt",
+                // Add other MIME types as needed
+              };
+
+              const extension = mimeToExtension[mimeType];
+              if (!extension) {
+                throw new Error("Could not get the file's extension.");
+              }
+
+              // Rename the file with the correct extension
+              const finalFilePath = `${filePath}${extension}`;
+              await FileSystem.moveAsync({
+                from: downloadResult.uri,
+                to: finalFilePath,
+              });
+
+              console.log("Final File Path:", finalFilePath);
+
+              // Save to MediaLibrary
+              const asset = await MediaLibrary.createAssetAsync(finalFilePath);
+              await MediaLibrary.createAlbumAsync("TaxRide", asset, false);
+
+              Alert.alert(
+                "Download Success",
+                `${sanitizedFileName}${extension} has been downloaded.`
+              );
+            },
+          },
+        ]
       );
     } catch (error) {
       console.error("Download Error:", error.message || error);
@@ -513,7 +554,10 @@ export default function HomeScreen() {
             </Dialog.Description>
             <Dialog.Button
               label="No"
-              onPress={() => setDeleteDialogVisible(false)}
+              onPress={() => {
+                setDeleteDialogVisible(false);
+                handleCancelDeleteFile();
+              }}
             />
             <Dialog.Button label="Yes" onPress={handleDeleteFile} />
           </Dialog.Container>

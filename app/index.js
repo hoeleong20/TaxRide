@@ -1,6 +1,6 @@
 import { ActionSheetProvider } from "@expo/react-native-action-sheet";
-import WelcomeScreen from "./WelcomeScreen";
 import React from "react";
+import WelcomeScreen from "./WelcomeScreen";
 
 export default function App() {
   return (

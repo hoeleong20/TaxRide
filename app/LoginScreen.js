@@ -10,7 +10,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
 } from "react-native";
-import { useState } from "react";
+import { useState, useContext } from "react";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -19,12 +19,15 @@ import ButtonC from "../components/ButtonC";
 import TextInputC from "../components/TextInputC";
 import BackButtonC from "../components/BackButtonC";
 import { Link, router } from "expo-router";
+import { LoginContext } from "./LoginContext";
 
 import { BASE_URL } from "@env";
 
 const logoImg = require("../assets/taxride_logo.png");
 
 export default function LoginScreen() {
+  const { setIsLoggedIn } = useContext(LoginContext);
+
   const [email, setEmail] = useState("hoeleongjob01@gmail.com");
   const [password, setPassword] = useState("pass1234.");
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -55,6 +58,7 @@ export default function LoginScreen() {
       const data = await response.json();
       if (response.ok) {
         Alert.alert("Success", "Login successful!");
+        setIsLoggedIn(true);
         router.push("/HomeScreen");
       } else {
         Alert.alert("Error", data.message || "Login failed");

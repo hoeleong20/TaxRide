@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import { FilesContext } from "../../../FilesContext";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
@@ -9,6 +9,7 @@ import {
   StatusBar,
   SafeAreaView,
   ScrollView,
+  Alert,
 } from "react-native";
 import {
   widthPercentageToDP as wp,
@@ -23,7 +24,18 @@ export default function FilesYScreen() {
   const { year } = useLocalSearchParams();
   const router = useRouter();
 
-  if (!year || !years[year]) return <Text>Year not found.</Text>;
+  useEffect(() => {
+    if (!years[year]) {
+      Alert.alert(
+        "No Folders Found",
+        "The selected year does not contain any folders. Returning to the previous screen.",
+        [{ text: "OK", onPress: () => router.back() }]
+      );
+    }
+  }, [years, year, router]);
+
+  // Guard against missing data
+  const categories = years[year] || {};
 
   return (
     <SafeAreaView>
@@ -31,18 +43,24 @@ export default function FilesYScreen() {
         <View>
           <FileScreenTitleC screenTitleText={year} />
           <View>
-            {Object.keys(years[year]).map((category) => (
-              <FolderC
-                key={category}
-                folderName={category}
-                onPress={() =>
-                  router.push({
-                    pathname: `../FilesYCScreen/${category}`,
-                    params: { year },
-                  })
-                }
-              />
-            ))}
+            {Object.keys(categories).length > 0 ? (
+              Object.keys(categories).map((category) => (
+                <FolderC
+                  key={category}
+                  folderName={category}
+                  onPress={() =>
+                    router.push({
+                      pathname: `../FilesYCScreen/${category}`,
+                      params: { year },
+                    })
+                  }
+                />
+              ))
+            ) : (
+              <Text style={styles.noFoldersText}>
+                No folders available for this year.
+              </Text>
+            )}
           </View>
         </View>
       </ScrollView>
@@ -54,5 +72,11 @@ const styles = StyleSheet.create({
   container: {
     paddingTop: StatusBar.currentHeight,
     paddingHorizontal: wp(7),
+  },
+  noFoldersText: {
+    marginTop: hp(3),
+    textAlign: "center",
+    color: "gray",
+    fontSize: hp(2),
   },
 });

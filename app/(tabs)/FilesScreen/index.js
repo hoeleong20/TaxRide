@@ -25,7 +25,16 @@ export default function FilesScreen() {
   const { years } = structuredData;
   const router = useRouter();
 
-  if (!years) return <Text>Loading...</Text>;
+  // Check if data is still loading or is empty
+  if (!structuredData || !years || Object.keys(years).length === 0) {
+    return (
+      <SafeAreaView style={styles.centeredContainer}>
+        <Text style={styles.placeholderText}>
+          {structuredData ? "No files available." : "Loading..."}
+        </Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>

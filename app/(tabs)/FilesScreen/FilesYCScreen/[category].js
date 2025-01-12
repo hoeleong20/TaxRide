@@ -1,7 +1,7 @@
 import React, { useContext, useState, useEffect, useCallback } from "react";
 import { FilesContext } from "../../../FilesContext";
 import { useLocalSearchParams } from "expo-router";
-
+import { router } from "expo-router";
 import {
   Text,
   View,
@@ -60,11 +60,18 @@ export default function FilesYCScreen() {
     setOpenYear(false);
   }, []);
 
-  if (!year || !category || !years[year]?.[category]) {
-    return <Text>Files not found for the selected year and category.</Text>;
-  }
+  useEffect(() => {
+    if (!years[year]?.[category]) {
+      Alert.alert(
+        "No Files Found",
+        "The selected category is empty. Returning to the previous screen.",
+        [{ text: "OK", onPress: () => router.back() }]
+      );
+    }
+  }, [years, year, category, router]);
 
-  const files = years[year][category];
+  // Guard against missing data to avoid rendering issues
+  const files = years[year]?.[category] || [];
 
   const openFile = (fileName, fileUri) => {
     if (!fileUri || !fileUri.startsWith("https://")) {
@@ -108,7 +115,7 @@ export default function FilesYCScreen() {
       Alert.alert("Success", response.data.message);
       setEditDialogVisible(false);
       setActiveDropdown(null);
-      refreshFiles();
+      await refreshFiles();
     } catch (error) {
       console.error("Error updating file:", error);
       Alert.alert("Error", "Failed to update file details.");
@@ -121,7 +128,7 @@ export default function FilesYCScreen() {
       Alert.alert("Success", response.data.message);
       setDeleteDialogVisible(false);
       setActiveDropdown(null);
-      refreshFiles();
+      await refreshFiles();
     } catch (error) {
       console.error("Error deleting file:", error);
       Alert.alert("Error", "Failed to delete file.");
@@ -234,19 +241,25 @@ export default function FilesYCScreen() {
           <ScrollView style={styles.container}>
             <FileScreenTitleC screenTitleText={`${category}`} />
             <View>
-              {files.map((file) => (
-                <Pressable
-                  key={file.id}
-                  onPress={() => openFile(file.fileName, file.directLink)}
-                >
-                  <FileC
-                    fileName={file.fileName}
-                    fileDate={formatDate(file.modifiedTime)}
-                    fileSize={formatSize(file.size)}
-                    onMenuPress={(x, y) => handleMenuPress(file.id, x, y)} // Pass position for dropdown
-                  />
-                </Pressable>
-              ))}
+              {files.length > 0 ? (
+                files.map((file) => (
+                  <Pressable
+                    key={file.id}
+                    onPress={() => openFile(file.fileName, file.directLink)}
+                  >
+                    <FileC
+                      fileName={file.fileName}
+                      fileDate={formatDate(file.modifiedTime)}
+                      fileSize={formatSize(file.size)}
+                      onMenuPress={(x, y) => handleMenuPress(file.id, x, y)} // Pass position for dropdown
+                    />
+                  </Pressable>
+                ))
+              ) : (
+                <Text style={styles.noFilesText}>
+                  No files available for this category.
+                </Text>
+              )}
             </View>
           </ScrollView>
 
