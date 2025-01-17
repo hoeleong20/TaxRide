@@ -1,6 +1,6 @@
 import React, { useContext, useEffect } from "react";
 import { FilesContext } from "../../../FilesContext";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, router } from "expo-router";
 
 import {
   Text,
@@ -20,22 +20,26 @@ import FolderC from "../../../../components/FolderC";
 
 export default function FilesYScreen() {
   const { structuredData } = useContext(FilesContext);
-  const { years } = structuredData;
-  const { year } = useLocalSearchParams();
-  const router = useRouter();
+  const { year } = useLocalSearchParams(); // Get the year parameter from route
+
+  // Group files by category for the selected year
+  const categories = structuredData
+    .filter((file) => file.name.startsWith(`${year}-`))
+    .reduce((acc, file) => {
+      const [, category] = file.name.split("-");
+      if (!acc.includes(category)) acc.push(category);
+      return acc;
+    }, []);
 
   useEffect(() => {
-    if (!years[year]) {
+    if (categories.length === 0) {
       Alert.alert(
         "No Folders Found",
         "The selected year does not contain any folders. Returning to the previous screen.",
         [{ text: "OK", onPress: () => router.back() }]
       );
     }
-  }, [years, year, router]);
-
-  // Guard against missing data
-  const categories = years[year] || {};
+  }, [categories, router]);
 
   return (
     <SafeAreaView>
@@ -43,8 +47,8 @@ export default function FilesYScreen() {
         <View>
           <FileScreenTitleC screenTitleText={year} />
           <View>
-            {Object.keys(categories).length > 0 ? (
-              Object.keys(categories).map((category) => (
+            {categories.length > 0 ? (
+              categories.map((category) => (
                 <FolderC
                   key={category}
                   folderName={category}

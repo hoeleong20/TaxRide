@@ -28,6 +28,8 @@ import { BASE_URL } from "@env";
 import { FilesContext } from "../app/FilesContext";
 
 export default function TabBarC({ state, descriptors, navigation }) {
+  const { loggedInEmail } = useContext(LoginContext);
+
   const { refreshFiles } = useContext(FilesContext);
 
   const [years, setYears] = useState([]);
@@ -259,18 +261,22 @@ export default function TabBarC({ state, descriptors, navigation }) {
 
       console.log("FormData prepared:", formData);
 
-      const response = await axios.post(`${BASE_URL}/upload`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const response = await axios.post(
+        `${BASE_URL}/upload?email=${loggedInEmail}`, // Add email to query
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
       console.log("File uploaded successfully:", response.data);
       await refreshFiles();
 
       Alert.alert(
         "Upload Successful",
-        `Your image have been uploaded to Google Drive.`,
+        `Your image has been uploaded to Google Drive.`,
         [{ text: "OK" }]
       );
 
@@ -293,7 +299,6 @@ export default function TabBarC({ state, descriptors, navigation }) {
 
           await refreshFiles();
 
-          // Alert the user about the issue and fallback
           Alert.alert(
             "Insufficient Storage",
             "Google Drive does not have enough space. The file has been saved locally and will be retried later.",
@@ -340,9 +345,13 @@ export default function TabBarC({ state, descriptors, navigation }) {
         });
 
         try {
-          const response = await axios.post(`${BASE_URL}/upload`, formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-          });
+          const response = await axios.post(
+            `${BASE_URL}/upload?email=${loggedInEmail}`, // Add email to query
+            formData,
+            {
+              headers: { "Content-Type": "multipart/form-data" },
+            }
+          );
 
           if (response.status === 200) {
             console.log(`File ${file.name} uploaded successfully.`);
@@ -534,6 +543,15 @@ export default function TabBarC({ state, descriptors, navigation }) {
               <Dialog.Button
                 label="Upload"
                 onPress={async () => {
+                  // Validation logic
+                  if (!year || !category || !filename.trim()) {
+                    Alert.alert(
+                      "Validation Error",
+                      "Please fill in all fields."
+                    );
+                    return;
+                  }
+
                   console.log("Dialog 'Upload' button pressed");
                   setDialogVisible(false);
                   await uploadImage(); // Await upload to avoid conflicts

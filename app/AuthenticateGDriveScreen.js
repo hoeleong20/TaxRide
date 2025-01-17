@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import {
   Text,
   View,
@@ -6,43 +6,69 @@ import {
   SafeAreaView,
   Image,
   Alert,
-  KeyboardAvoidingView,
-  TouchableWithoutFeedback,
-  Keyboard,
-  Platform,
-  StatusBar,
   ScrollView,
+  StatusBar,
 } from "react-native";
+import { router } from "expo-router";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
 import ButtonC from "../components/ButtonC";
 import BackButtonC from "../components/BackButtonC";
-
+import { FilesContext } from "../app/FilesContext";
 import { BASE_URL } from "@env";
 
 const gdriveLogo = require("../assets/gdrive.png");
 
 export default function AuthenticateGDriveScreen() {
-  const [email, setEmail] = useState("chewhl2002@gmail.com");
+  const { refreshFiles } = useContext(FilesContext); // Access `refreshFiles`
+  const { loggedInEmail } = useContext(LoginContext);
 
-  const handleLogin = async () => {
+  const handleGDriveConnection = async () => {
     try {
-      const response = await fetch(`${BASE_URL}/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+      const response = await fetch(
+        `${BASE_URL}/gdrive/authenticate?email=${loggedInEmail}`,
+        {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
 
-      const data = await response.json();
-      if (response.ok) {
-        Alert.alert("Success", "Login successful!");
-        router.push("/AuthenticateGDriveScreen");
+      if (response.status === 202) {
+        Alert.alert(
+          "Authorization",
+          "Please complete authorization in the browser."
+        );
+
+        // Poll for status
+        const pollStatus = setInterval(async () => {
+          const statusResponse = await fetch(
+            `${BASE_URL}/gdrive/status?email=${loggedInEmail}`
+          );
+          const statusData = await statusResponse.json();
+
+          if (statusData.isAuthenticated) {
+            clearInterval(pollStatus); // Stop polling
+            Alert.alert("Success", "Google Drive connected successfully!");
+            await refreshFiles(); // Refresh files after successful authentication
+            router.push("/HomeScreen"); // Redirect to the home screen
+          }
+        }, 5000); // Poll every 5 seconds
+      } else if (response.ok) {
+        Alert.alert("Success", "Google Drive connected successfully!");
+        await refreshFiles(); // Refresh files after successful connection
+        router.push("/HomeScreen"); //SignUpScreen
       } else {
-        Alert.alert("Error", data.message || "Login failed");
+        const errorData = await response.json();
+        Alert.alert(
+          "Error",
+          errorData.message ||
+            "Failed to connect to Google Drive. Please try again."
+        );
       }
     } catch (error) {
+      console.error("Error during Google Drive connection:", error);
       Alert.alert("Error", "Something went wrong. Please try again later.");
     }
   };
@@ -55,13 +81,15 @@ export default function AuthenticateGDriveScreen() {
         <View style={styles.logoContainer}>
           <Image source={gdriveLogo} style={styles.gdriveLogoStyle} />
         </View>
-        <Text style={styles.titleText}>Welcome Back</Text>
-
+        <Text style={styles.titleText}>Connect to Google Drive</Text>
+        <Text style={styles.descText}>
+          Click the button below to connect your Google Drive account.
+        </Text>
         <ButtonC
-          textContent="Login"
-          buttonStyle={styles.loginButton}
-          textStyle={styles.loginText}
-          onPress={handleLogin}
+          textContent="Connect Google Drive"
+          buttonStyle={styles.connectButton}
+          textStyle={styles.connectText}
+          onPress={handleGDriveConnection}
         />
       </ScrollView>
     </SafeAreaView>
@@ -94,21 +122,12 @@ const styles = StyleSheet.create({
     marginBottom: hp(4),
     color: "#8391A1",
   },
-  loginButton: {
+  connectButton: {
     backgroundColor: "#3E33D9",
     borderColor: "#3E33D9",
     marginBottom: hp(2),
   },
-  loginText: {
+  connectText: {
     color: "white",
-  },
-  inputContainer: {
-    minHeight: hp(11.5), // Define a fixed height to include both input and tooltip
-  },
-  tooltip: {
-    fontSize: hp(1.5),
-    color: "red",
-    padding: 0,
-    marginBottom: hp(0.5),
   },
 });

@@ -1,7 +1,6 @@
 import React, { useContext, useState, useEffect, useCallback } from "react";
 import { FilesContext } from "../../../FilesContext";
-import { useLocalSearchParams } from "expo-router";
-import { router } from "expo-router";
+import { useLocalSearchParams, router } from "expo-router";
 import {
   Text,
   View,
@@ -31,6 +30,9 @@ import * as FileSystem from "expo-file-system";
 import * as MediaLibrary from "expo-media-library";
 
 export default function FilesYCScreen() {
+  // Replace this with the actual email of the user
+  const userEmail = "chewhl2002@gmail.com";
+
   const { structuredData } = useContext(FilesContext);
   const { refreshFiles } = useContext(FilesContext);
   const { years } = structuredData;
@@ -60,20 +62,34 @@ export default function FilesYCScreen() {
     setOpenYear(false);
   }, []);
 
+  // Helper function to extract the filename
+  const extractFileName = (fullName) => {
+    const parts = fullName.split("-");
+    const nameWithoutYearCategory = parts.slice(2).join("-"); // Remove year and category
+    const nameWithoutExtension = nameWithoutYearCategory.replace(
+      /\.[^/.]+$/,
+      ""
+    ); // Remove extension
+    return nameWithoutExtension;
+  };
+
+  // Filter files for the selected year and category
+  const files = structuredData.filter((file) =>
+    file.name.startsWith(`${year}-${category}-`)
+  );
+
   useEffect(() => {
-    if (!years[year]?.[category]) {
+    if (files.length === 0) {
       Alert.alert(
         "No Files Found",
-        "The selected category is empty. Returning to the previous screen.",
+        "The selected category does not contain any files. Returning to the previous screen.",
         [{ text: "OK", onPress: () => router.back() }]
       );
     }
-  }, [years, year, category, router]);
-
-  // Guard against missing data to avoid rendering issues
-  const files = years[year]?.[category] || [];
+  }, [files, router]);
 
   const openFile = (fileName, fileUri) => {
+    console.log(fileName);
     if (!fileUri || !fileUri.startsWith("https://")) {
       Alert.alert("Invalid or inaccessible file URI.");
       return;
@@ -105,12 +121,16 @@ export default function FilesYCScreen() {
   const handleEditSubmit = async (fileId) => {
     try {
       console.log(fileId);
-      const response = await axios.patch(`${BASE_URL}/edit-file`, {
-        fileId,
-        year: editedYear,
-        category: editedCategory,
-        filename: editedFilename,
-      });
+      const response = await axios.patch(
+        `${BASE_URL}/edit-file?email=${userEmail}`, // Add email to query string
+        {
+          fileId,
+          year: editedYear,
+          category: editedCategory,
+          filename: editedFilename,
+        }
+      );
+      console.log(response);
 
       Alert.alert("Success", response.data.message);
       setEditDialogVisible(false);
@@ -124,7 +144,9 @@ export default function FilesYCScreen() {
 
   const handleDeleteFile = async (fileId) => {
     try {
-      const response = await axios.delete(`${BASE_URL}/delete-file/${fileId}`);
+      const response = await axios.delete(
+        `${BASE_URL}/delete-file/${fileId}?email=${userEmail}` // Add email to query string
+      );
       Alert.alert("Success", response.data.message);
       setDeleteDialogVisible(false);
       setActiveDropdown(null);
@@ -152,10 +174,18 @@ export default function FilesYCScreen() {
 
   const downloadFile = async (fileUri, fileName) => {
     try {
+      if (!fileName) {
+        throw new Error("File name is required for downloading.");
+      }
+
       console.log("Original File Name:", fileName);
 
+      // Remove any existing extension before sanitizing
+      const nameWithoutExtension = fileName.replace(/\.[^/.]+$/, "");
+      console.log("File Name Without Extension:", nameWithoutExtension);
+
       // Sanitize file name to prevent directory issues
-      const sanitizedFileName = fileName.replace(/[^\w.-]/g, "_");
+      const sanitizedFileName = nameWithoutExtension.replace(/[^\w.-]/g, "_");
       console.log("Sanitized File Name:", sanitizedFileName);
 
       // Define the file path
@@ -183,8 +213,6 @@ export default function FilesYCScreen() {
       console.log(`Downloading from ${fileUri} to ${filePath}`);
       const downloadResult = await FileSystem.downloadAsync(fileUri, filePath);
 
-      // console.log("Download Result:", downloadResult);
-
       // Extract MIME type from headers
       const mimeType = downloadResult.headers["content-type"];
       console.log("MIME Type:", mimeType);
@@ -203,7 +231,7 @@ export default function FilesYCScreen() {
         throw new Error("Could not get the file's extension.");
       }
 
-      // Rename the file with the correct extension
+      // Append the correct extension to the sanitized file name
       const finalFilePath = `${filePath}${extension}`;
       await FileSystem.moveAsync({
         from: downloadResult.uri,
@@ -232,25 +260,30 @@ export default function FilesYCScreen() {
   return (
     <TouchableWithoutFeedback
       onPress={() => {
+        Keyboard.dismiss(); // Dismiss keyboard on tap outside
         setActiveDropdown(null); // Dismiss dropdown when tapping outside
-        Keyboard.dismiss(); // Dismiss keyboard if open
       }}
     >
       <SafeAreaView style={{ flex: 1 }}>
         <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
           <ScrollView style={styles.container}>
-            <FileScreenTitleC screenTitleText={`${category}`} />
+            <FileScreenTitleC screenTitleText={category} />
             <View>
               {files.length > 0 ? (
                 files.map((file) => (
                   <Pressable
                     key={file.id}
-                    onPress={() => openFile(file.fileName, file.directLink)}
+                    onPress={() =>
+                      openFile(extractFileName(file.name), file.directLink)
+                    }
                   >
                     <FileC
-                      fileName={file.fileName}
-                      fileDate={formatDate(file.modifiedTime)}
-                      fileSize={formatSize(file.size)}
+                      key={file.id}
+                      fileName={extractFileName(file.name)} // Pass extracted file name
+                      fileDate={new Date(file.modifiedTime).toLocaleDateString(
+                        "en-GB"
+                      )}
+                      fileSize={`${Math.round(file.size / 1024)} KB`}
                       onMenuPress={(x, y) => handleMenuPress(file.id, x, y)} // Pass position for dropdown
                     />
                   </Pressable>
@@ -261,139 +294,140 @@ export default function FilesYCScreen() {
                 </Text>
               )}
             </View>
+
+            {/* Dropdown menu */}
+            {activeDropdown && (
+              <View
+                style={[
+                  styles.dropdownMenu,
+                  { top: dropdownPosition.y, left: dropdownPosition.x },
+                ]}
+              >
+                <Pressable
+                  style={styles.menuItem}
+                  onPress={() => {
+                    setEditDialogVisible(true);
+                  }}
+                >
+                  <Text style={styles.menuText}>Edit</Text>
+                </Pressable>
+                <Pressable
+                  style={styles.menuItem}
+                  onPress={() => {
+                    const file = files.find((f) => f.id === activeDropdown);
+                    console.log(file);
+                    downloadFile(file.directLink, file.name);
+                  }}
+                >
+                  <Text style={styles.menuText}>Download</Text>
+                </Pressable>
+                <Pressable
+                  style={styles.lastMenuItem}
+                  onPress={() => {
+                    setDeleteDialogVisible(true);
+                  }}
+                >
+                  <Text style={styles.menuText}>Delete</Text>
+                </Pressable>
+              </View>
+            )}
+
+            {/* Edit Dialog */}
+            <Dialog.Container visible={editDialogVisible}>
+              <Dialog.Title>Edit File</Dialog.Title>
+              <DropDownPicker
+                open={openYear}
+                onOpen={onYearOpen}
+                value={editedYear} // Current value is the default
+                items={[
+                  { label: editedYear, value: editedYear }, // Add current value explicitly as the first item
+                  ...yearsOption.filter((yr) => yr.value !== editedYear), // Append the rest, excluding the current value
+                ]}
+                setOpen={setOpenYear}
+                setValue={setEditedYear}
+                placeholder="Select Year"
+                style={{
+                  marginBottom: 15,
+                  borderWidth: 1,
+                  borderColor: "#ccc",
+                }}
+                dropDownContainerStyle={{
+                  maxHeight: 120, // Restrict height to allow scrolling
+                  borderWidth: 1,
+                  borderColor: "#ccc",
+                  zIndex: 3000, // Ensure it appears above other elements
+                }}
+                zIndex={2000} // Ensure dropdown is above other elements
+                zIndexInverse={1000} // Prevent overlap with other components
+              />
+              <DropDownPicker
+                open={openCategory}
+                onOpen={onCategoryOpen}
+                value={editedCategory} // Current value is the default
+                items={[
+                  { label: editedCategory, value: editedCategory }, // Add current value explicitly as the first item
+                  ...categoriesOption.filter(
+                    (cat) => cat.value !== editedCategory
+                  ), // Append the rest, excluding the current value
+                ]}
+                setOpen={setOpenCategory}
+                setValue={setEditedCategory}
+                placeholder="Select Category"
+                style={{
+                  marginBottom: 15,
+                  borderWidth: 1,
+                  borderColor: "#ccc",
+                }}
+                dropDownContainerStyle={{
+                  maxHeight: 120, // Restrict height to allow scrolling
+                  borderWidth: 1,
+                  borderColor: "#ccc",
+                  zIndex: 3000, // Ensure it appears above other elements
+                }}
+                zIndex={2000} // Ensure dropdown is above other elements
+                zIndexInverse={1000} // Prevent overlap with other components
+              />
+              <Dialog.Input
+                placeholder="File Name"
+                value={editedFilename}
+                onChangeText={setEditedFilename}
+              />
+              <Dialog.Button
+                label="Cancel"
+                onPress={() => setEditDialogVisible(false)}
+              />
+              <Dialog.Button
+                label="Submit"
+                onPress={() => handleEditSubmit(activeDropdown)}
+              />
+            </Dialog.Container>
+
+            {/* Delete Dialog */}
+            <Dialog.Container visible={deleteDialogVisible}>
+              <Dialog.Title>Delete File</Dialog.Title>
+              <Dialog.Description>
+                Are you sure you want to delete this file? This action cannot be
+                undone.
+              </Dialog.Description>
+              <Dialog.Button
+                label="No"
+                onPress={() => setDeleteDialogVisible(false)}
+              />
+              <Dialog.Button
+                label="Yes"
+                onPress={() => handleDeleteFile(activeDropdown)}
+              />
+            </Dialog.Container>
+
+            {imageUri && (
+              <ImagePreviewC
+                modalVisible={modalVisible}
+                setModalVisible={setModalVisible}
+                imageUri={imageUri}
+                imageName={imageName}
+              />
+            )}
           </ScrollView>
-
-          {/* Dropdown menu */}
-          {activeDropdown && (
-            <View
-              style={[
-                styles.dropdownMenu,
-                { top: dropdownPosition.y, left: dropdownPosition.x },
-              ]}
-            >
-              <Pressable
-                style={styles.menuItem}
-                onPress={() => {
-                  setEditDialogVisible(true);
-                }}
-              >
-                <Text style={styles.menuText}>Edit</Text>
-              </Pressable>
-              <Pressable
-                style={styles.menuItem}
-                onPress={() => {
-                  const file = files.find((f) => f.id === activeDropdown);
-                  downloadFile(file.directLink, file.fileName);
-                }}
-              >
-                <Text style={styles.menuText}>Download</Text>
-              </Pressable>
-              <Pressable
-                style={styles.lastMenuItem}
-                onPress={() => {
-                  setDeleteDialogVisible(true);
-                }}
-              >
-                <Text style={styles.menuText}>Delete</Text>
-              </Pressable>
-            </View>
-          )}
-
-          {/* Edit Dialog */}
-          <Dialog.Container visible={editDialogVisible}>
-            <Dialog.Title>Edit File</Dialog.Title>
-            <DropDownPicker
-              open={openYear}
-              onOpen={onYearOpen}
-              value={editedYear} // Current value is the default
-              items={[
-                { label: editedYear, value: editedYear }, // Add current value explicitly as the first item
-                ...yearsOption.filter((yr) => yr.value !== editedYear), // Append the rest, excluding the current value
-              ]}
-              setOpen={setOpenYear}
-              setValue={setEditedYear}
-              placeholder="Select Year"
-              style={{
-                marginBottom: 15,
-                borderWidth: 1,
-                borderColor: "#ccc",
-              }}
-              dropDownContainerStyle={{
-                maxHeight: 120, // Restrict height to allow scrolling
-                borderWidth: 1,
-                borderColor: "#ccc",
-                zIndex: 3000, // Ensure it appears above other elements
-              }}
-              zIndex={2000} // Ensure dropdown is above other elements
-              zIndexInverse={1000} // Prevent overlap with other components
-            />
-            <DropDownPicker
-              open={openCategory}
-              onOpen={onCategoryOpen}
-              value={editedCategory} // Current value is the default
-              items={[
-                { label: editedCategory, value: editedCategory }, // Add current value explicitly as the first item
-                ...categoriesOption.filter(
-                  (cat) => cat.value !== editedCategory
-                ), // Append the rest, excluding the current value
-              ]}
-              setOpen={setOpenCategory}
-              setValue={setEditedCategory}
-              placeholder="Select Category"
-              style={{
-                marginBottom: 15,
-                borderWidth: 1,
-                borderColor: "#ccc",
-              }}
-              dropDownContainerStyle={{
-                maxHeight: 120, // Restrict height to allow scrolling
-                borderWidth: 1,
-                borderColor: "#ccc",
-                zIndex: 3000, // Ensure it appears above other elements
-              }}
-              zIndex={2000} // Ensure dropdown is above other elements
-              zIndexInverse={1000} // Prevent overlap with other components
-            />
-            <Dialog.Input
-              placeholder="File Name"
-              value={editedFilename}
-              onChangeText={setEditedFilename}
-            />
-            <Dialog.Button
-              label="Cancel"
-              onPress={() => setEditDialogVisible(false)}
-            />
-            <Dialog.Button
-              label="Submit"
-              onPress={() => handleEditSubmit(activeDropdown)}
-            />
-          </Dialog.Container>
-
-          {/* Delete Dialog */}
-          <Dialog.Container visible={deleteDialogVisible}>
-            <Dialog.Title>Delete File</Dialog.Title>
-            <Dialog.Description>
-              Are you sure you want to delete this file? This action cannot be
-              undone.
-            </Dialog.Description>
-            <Dialog.Button
-              label="No"
-              onPress={() => setDeleteDialogVisible(false)}
-            />
-            <Dialog.Button
-              label="Yes"
-              onPress={() => handleDeleteFile(activeDropdown)}
-            />
-          </Dialog.Container>
-
-          {imageUri && (
-            <ImagePreviewC
-              modalVisible={modalVisible}
-              setModalVisible={setModalVisible}
-              imageUri={imageUri}
-              imageName={imageName}
-            />
-          )}
         </KeyboardAvoidingView>
       </SafeAreaView>
     </TouchableWithoutFeedback>

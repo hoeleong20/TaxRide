@@ -35,6 +35,9 @@ import { BASE_URL } from "@env";
 import axios from "axios";
 
 export default function HomeScreen() {
+  const { loggedInEmail } = useContext(LoginContext);
+
+
   const [name, setName] = useState("Ayush Srivastava");
   const [cloudStoragePerc, setCloudStoragePerc] = useState(0);
   const [cloudStorageText, setCloudStorageText] = useState("Loading...");
@@ -86,11 +89,12 @@ export default function HomeScreen() {
 
   useEffect(() => {
     const fetchCloudStorage = async () => {
-      await refreshFiles();
       try {
-        const response = await axios.get(`${BASE_URL}/drive/storage`);
-        const { used, total } = response.data;
+        const response = await axios.get(`${BASE_URL}/gdrive/storage`, {
+          params: { loggedInEmail },
+        });
 
+        const { used, total } = response.data;
         const percentageUsed = Math.floor((used / total) * 100);
 
         // Update state for cloud storage
@@ -108,7 +112,7 @@ export default function HomeScreen() {
     };
 
     fetchCloudStorage();
-  }, []);
+  }, [refreshFiles]);
 
   useEffect(() => {
     const fetchInternalStorage = async () => {
@@ -156,7 +160,10 @@ export default function HomeScreen() {
   // Fetch recent files
   const fetchRecentFiles = async () => {
     try {
-      const response = await axios.get(`${BASE_URL}/files`);
+      const response = await axios.get(`${BASE_URL}/files`, {
+        params: { loggedInEmail },
+      });
+
       const files = response.data;
 
       // Sort files by modified time in descending order
@@ -167,7 +174,7 @@ export default function HomeScreen() {
       // Take the top two most recent files
       setRecentFiles(sortedFiles.slice(0, 2));
     } catch (error) {
-      console.error("Error fetching recent files:", error);
+      console.error("Error fetching recent files:", error.message);
       Alert.alert("Error", "Failed to load recent files.");
     }
   };
@@ -199,17 +206,20 @@ export default function HomeScreen() {
   const handleEditSubmit = async (fileId) => {
     try {
       console.log(fileId);
-      const response = await axios.patch(`${BASE_URL}/edit-file`, {
-        fileId,
-        year: editedYear,
-        category: editedCategory,
-        filename: editedFilename,
-      });
+      const response = await axios.patch(
+        `${BASE_URL}/edit-file?email=${loggedInEmail}`, // Add email to query string
+        {
+          fileId,
+          year: editedYear,
+          category: editedCategory,
+          filename: editedFilename,
+        }
+      );
+      console.log(response);
 
       Alert.alert("Success", response.data.message);
       setEditDialogVisible(false);
       setActiveDropdown(null);
-      fetchRecentFiles();
       await refreshFiles();
     } catch (error) {
       console.error("Error updating file:", error);
@@ -217,16 +227,14 @@ export default function HomeScreen() {
     }
   };
 
-  const handleDeleteFile = async () => {
+  const handleDeleteFile = async (fileId) => {
     try {
       const response = await axios.delete(
-        `${BASE_URL}/delete-file/${activeDropdown}`
+        `${BASE_URL}/delete-file/${fileId}?email=${loggedInEmail}` // Add email to query string
       );
-
       Alert.alert("Success", response.data.message);
       setDeleteDialogVisible(false);
       setActiveDropdown(null);
-      fetchRecentFiles();
       await refreshFiles();
     } catch (error) {
       console.error("Error deleting file:", error);

@@ -5,6 +5,7 @@ export const LoginContext = createContext();
 export const LoginProvider = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [gDriveConnection, setGDriveConnection] = useState(false);
+  const [loggedInEmail, setLoggedInEmail] = useState("");
 
   return (
     <LoginContext.Provider
@@ -13,6 +14,8 @@ export const LoginProvider = ({ children }) => {
         setIsLoggedIn,
         gDriveConnection,
         setGDriveConnection,
+        loggedInEmail,
+        setLoggedInEmail,
       }}
     >
       {children}

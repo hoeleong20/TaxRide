@@ -27,6 +27,7 @@ const logoImg = require("../assets/taxride_logo.png");
 
 export default function LoginScreen() {
   const { setIsLoggedIn } = useContext(LoginContext);
+  const { setLoggedInEmail } = useContext(LoginContext);
 
   const [email, setEmail] = useState("hoeleongjob01@gmail.com");
   const [password, setPassword] = useState("pass1234.");
@@ -59,7 +60,8 @@ export default function LoginScreen() {
       if (response.ok) {
         Alert.alert("Success", "Login successful!");
         setIsLoggedIn(true);
-        router.push("/HomeScreen");
+        setLoggedInEmail(email);
+        router.push("/AuthenticateGDriveScreen");
       } else {
         Alert.alert("Error", data.message || "Login failed");
       }

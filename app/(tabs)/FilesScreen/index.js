@@ -6,11 +6,7 @@ import {
   Text,
   View,
   StyleSheet,
-  useWindowDimensions,
-  Image,
-  TextInput,
   SafeAreaView,
-  Pressable,
   ScrollView,
   StatusBar,
 } from "react-native";
@@ -22,16 +18,23 @@ import FolderC from "../../../components/FolderC";
 
 export default function FilesScreen() {
   const { structuredData } = useContext(FilesContext);
-  const { years } = structuredData;
   const router = useRouter();
 
-  // Check if data is still loading or is empty
-  if (!structuredData || !years || Object.keys(years).length === 0) {
+  // Group files by year
+  const groupedFiles = structuredData.reduce((acc, file) => {
+    const [year] = file.name.split("-"); // Extract year from the file name
+    if (!acc[year]) {
+      acc[year] = [];
+    }
+    acc[year].push(file);
+    return acc;
+  }, {});
+
+  // Check if there are no files
+  if (structuredData.length === 0) {
     return (
       <SafeAreaView style={styles.centeredContainer}>
-        <Text style={styles.placeholderText}>
-          {structuredData ? "No files available." : "Loading..."}
-        </Text>
+        <Text style={styles.placeholderText}>No files available.</Text>
       </SafeAreaView>
     );
   }
@@ -44,7 +47,7 @@ export default function FilesScreen() {
         </View>
 
         <View>
-          {Object.keys(years).map((year) => (
+          {Object.keys(groupedFiles).map((year) => (
             <FolderC
               key={year}
               folderName={year}
@@ -72,5 +75,14 @@ const styles = StyleSheet.create({
   screenTitleText: {
     fontSize: wp(6),
     marginLeft: wp(4),
+  },
+  centeredContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  placeholderText: {
+    fontSize: wp(4),
+    color: "#6B7280",
   },
 });
