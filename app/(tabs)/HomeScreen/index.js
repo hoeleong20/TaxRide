@@ -27,6 +27,8 @@ import DropDownPicker from "react-native-dropdown-picker";
 import * as FileSystem from "expo-file-system";
 import * as MediaLibrary from "expo-media-library";
 import { FilesContext } from "../../FilesContext";
+import { LoginContext } from "../../LoginContext";
+
 import { Link } from "expo-router";
 
 const profileImage = require("../../../assets/userProfile.jpg");
@@ -36,7 +38,6 @@ import axios from "axios";
 
 export default function HomeScreen() {
   const { loggedInEmail } = useContext(LoginContext);
-
 
   const [name, setName] = useState("Ayush Srivastava");
   const [cloudStoragePerc, setCloudStoragePerc] = useState(0);
@@ -50,6 +51,7 @@ export default function HomeScreen() {
   const [imageUri, setImageUri] = useState("");
 
   const [activeDropdown, setActiveDropdown] = useState("");
+  const [activeFileName, setActiveFileName] = useState("");
   const [dropdownPosition, setDropdownPosition] = useState({ x: 0, y: 0 });
 
   const [editDialogVisible, setEditDialogVisible] = useState(false);
@@ -57,6 +59,7 @@ export default function HomeScreen() {
   const [editedYear, setEditedYear] = useState("");
   const [editedCategory, setEditedCategory] = useState("");
   const [editedFilename, setEditedFilename] = useState("");
+  const [fileExtension, setFileExtension] = useState("");
 
   const [openYear, setOpenYear] = useState(false);
   const [openCategory, setOpenCategory] = useState(false);
@@ -91,7 +94,7 @@ export default function HomeScreen() {
     const fetchCloudStorage = async () => {
       try {
         const response = await axios.get(`${BASE_URL}/gdrive/storage`, {
-          params: { loggedInEmail },
+          params: { email: loggedInEmail },
         });
 
         const { used, total } = response.data;
@@ -144,7 +147,9 @@ export default function HomeScreen() {
     setEditedYear(year); // Extract and set year
     setEditedCategory(category); // Extract and set category
     setImageUri(file.directLink);
+
     setImageName(rest.join("-")); // Set only the filename
+    setFileExtension(file.name.match(/\.[^/.]+$/)?.[0] || ""); // Extract extension or default to empty string
     setModalVisible(true);
 
     setActiveDropdown(null);
@@ -161,7 +166,7 @@ export default function HomeScreen() {
   const fetchRecentFiles = async () => {
     try {
       const response = await axios.get(`${BASE_URL}/files`, {
-        params: { loggedInEmail },
+        params: { email: loggedInEmail },
       });
 
       const files = response.data;
@@ -183,9 +188,10 @@ export default function HomeScreen() {
     fetchRecentFiles();
   }, [structuredData]);
 
-  const handleMenuPress = (fileId, x, y) => {
+  const handleMenuPress = (fileId, fileName, x, y) => {
     setDropdownPosition({ x, y });
     setActiveDropdown(activeDropdown === fileId ? null : fileId);
+    setActiveFileName(fileName);
 
     // Find the selected file by its ID
     const file = recentFiles.find((file) => file.id === fileId);
@@ -200,26 +206,52 @@ export default function HomeScreen() {
       // Assign values to hooks
       setEditedYear(year);
       setEditedCategory(category);
+      setFileExtension(filename.match(/\.[^/.]+$/)?.[0] || ""); // Extract extension or default to empty string
     }
   };
 
   const handleEditSubmit = async (fileId) => {
     try {
-      console.log(fileId);
+          // Input validation
+    if (!editedYear) {
+      Alert.alert("Validation Error", "Please select a valid year.");
+      return;
+    }
+
+    if (!editedCategory) {
+      Alert.alert("Validation Error", "Please select a valid category.");
+      return;
+    }
+
+    if (!editedFilename || editedFilename.trim() === "") {
+      Alert.alert("Validation Error", "Filename cannot be empty.");
+      return;
+    }
+    
+      const updatedFilename = editedFilename.endsWith(fileExtension)
+        ? editedFilename
+        : `${editedFilename}${fileExtension}`;
+
       const response = await axios.patch(
-        `${BASE_URL}/edit-file?email=${loggedInEmail}`, // Add email to query string
+        `${BASE_URL}/edit-file?email=${loggedInEmail}`,
         {
           fileId,
           year: editedYear,
           category: editedCategory,
-          filename: editedFilename,
+          filename: updatedFilename,
         }
       );
-      console.log(response);
 
       Alert.alert("Success", response.data.message);
       setEditDialogVisible(false);
       setActiveDropdown(null);
+
+      // Update state to reflect changes in ImagePreviewC
+      setImageName(updatedFilename);
+      setEditedYear(editedYear);
+      setEditedCategory(editedCategory);
+      setEditedFilename("");
+
       await refreshFiles();
     } catch (error) {
       console.error("Error updating file:", error);
@@ -229,6 +261,8 @@ export default function HomeScreen() {
 
   const handleDeleteFile = async (fileId) => {
     try {
+      console.log("Deleting file with ID:", fileId); // Add this to debug
+
       const response = await axios.delete(
         `${BASE_URL}/delete-file/${fileId}?email=${loggedInEmail}` // Add email to query string
       );
@@ -245,8 +279,18 @@ export default function HomeScreen() {
   const handleCancelDeleteFile = async () => {
     Alert.alert(
       "Deletion Canceled",
-      `The deletion of "${activeDropdown}" has been canceled.`
+      `The deletion of "${activeFileName}" has been canceled.`
     );
+    setActiveDropdown(null);
+  };
+
+  const handleCancelEditFile = async () => {
+    Alert.alert(
+      "Edit Canceled",
+      `The edition of "${activeFileName}" has been canceled.`
+    );
+    setEditedFilename("");
+    setActiveDropdown(null);
   };
 
   const downloadFile = async (fileUri, fileName) => {
@@ -255,7 +299,13 @@ export default function HomeScreen() {
 
       // Extract the actual file name (removing year and category)
       const parts = fileName.split("-");
-      const sanitizedFileName = parts.slice(2).join("-"); // Skip the first two parts (year and category)
+      const actualFileName = parts.slice(2).join("-"); // Skip the first two parts (year and category)
+      // Remove any existing extension before sanitizing
+      const nameWithoutExtension = actualFileName.replace(/\.[^/.]+$/, "");
+      console.log("File Name Without Extension:", nameWithoutExtension);
+
+      // Sanitize file name to prevent directory issues
+      const sanitizedFileName = nameWithoutExtension.replace(/[^\w.-]/g, "_");
       console.log("Sanitized File Name:", sanitizedFileName);
 
       // Alert user to confirm download
@@ -314,7 +364,8 @@ export default function HomeScreen() {
 
               // Map MIME type to file extension
               const mimeToExtension = {
-                "image/jpeg": ".jpg",
+                "image/jpg": ".jpg",
+                "image/jpeg": ".jpeg",
                 "image/png": ".png",
                 "application/pdf": ".pdf",
                 "text/plain": ".txt",
@@ -343,6 +394,8 @@ export default function HomeScreen() {
                 "Download Success",
                 `${sanitizedFileName}${extension} has been downloaded.`
               );
+
+              setActiveDropdown(null);
             },
           },
         ]
@@ -432,6 +485,7 @@ export default function HomeScreen() {
                       onMenuPress={(x, y) =>
                         handleMenuPress(
                           file.id,
+                          extractFileName(file.name),
                           x - wp(4),
                           index === 1 ? y - hp(25) : y - hp(3) // Adjust y position for the second file
                         )
@@ -444,6 +498,7 @@ export default function HomeScreen() {
           </View>
           {imageUri && (
             <ImagePreviewC
+              key={`${imageUri}-${imageName}-${editedYear}-${editedCategory}`}
               modalVisible={modalVisible}
               setModalVisible={setModalVisible}
               imageUri={imageUri}
@@ -453,6 +508,7 @@ export default function HomeScreen() {
               fileCategory={editedCategory}
             />
           )}
+
           {activeDropdown && (
             <View
               style={[
@@ -546,7 +602,10 @@ export default function HomeScreen() {
             />
             <Dialog.Button
               label="Cancel"
-              onPress={() => setEditDialogVisible(false)}
+              onPress={() => {
+                setEditDialogVisible(false);
+                handleCancelEditFile();
+              }}
             />
             <Dialog.Button
               label="Submit"
@@ -567,7 +626,10 @@ export default function HomeScreen() {
                 handleCancelDeleteFile();
               }}
             />
-            <Dialog.Button label="Yes" onPress={handleDeleteFile} />
+            <Dialog.Button
+              label="Yes"
+              onPress={() => handleDeleteFile(activeDropdown)}
+            />
           </Dialog.Container>
         </ScrollView>
       </SafeAreaView>

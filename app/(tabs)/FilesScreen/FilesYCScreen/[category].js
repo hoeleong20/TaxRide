@@ -25,13 +25,14 @@ import Dialog from "react-native-dialog";
 import DropDownPicker from "react-native-dropdown-picker";
 import axios from "axios";
 import { BASE_URL } from "@env";
+import { LoginContext } from "../../../LoginContext";
 
 import * as FileSystem from "expo-file-system";
 import * as MediaLibrary from "expo-media-library";
 
 export default function FilesYCScreen() {
   // Replace this with the actual email of the user
-  const userEmail = "chewhl2002@gmail.com";
+  const { loggedInEmail } = useContext(LoginContext);
 
   const { structuredData } = useContext(FilesContext);
   const { refreshFiles } = useContext(FilesContext);
@@ -39,10 +40,13 @@ export default function FilesYCScreen() {
   const { year, category } = useLocalSearchParams();
 
   const [modalVisible, setModalVisible] = useState(false);
+  const [modalImageId, setModalImageId] = useState("");
+
   const [imageUri, setImageUri] = useState("");
   const [imageName, setImageName] = useState("");
 
   const [activeDropdown, setActiveDropdown] = useState("");
+  const [activeFileName, setActiveFileName] = useState("");
   const [dropdownPosition, setDropdownPosition] = useState({ x: 0, y: 0 });
 
   const [editDialogVisible, setEditDialogVisible] = useState(false);
@@ -50,6 +54,7 @@ export default function FilesYCScreen() {
   const [editedYear, setEditedYear] = useState(year);
   const [editedCategory, setEditedCategory] = useState(category);
   const [editedFilename, setEditedFilename] = useState("");
+  const [fileExtension, setFileExtension] = useState("");
 
   const [openYear, setOpenYear] = useState(false);
   const [openCategory, setOpenCategory] = useState(false);
@@ -88,16 +93,17 @@ export default function FilesYCScreen() {
     }
   }, [files, router]);
 
-  const openFile = (fileName, fileUri) => {
+  const openFile = (fileId, fileName, fileUri) => {
     console.log(fileName);
     if (!fileUri || !fileUri.startsWith("https://")) {
       Alert.alert("Invalid or inaccessible file URI.");
       return;
     }
-    setActiveDropdown(null);
     setModalVisible(true);
+    setModalImageId(fileId);
     setImageName(fileName);
     setImageUri(fileUri);
+    setFileExtension(fileName.match(/\.[^/.]+$/)?.[0] || ""); // Extract extension or default to empty string
   };
 
   const formatDate = (dateString) => {
@@ -108,10 +114,33 @@ export default function FilesYCScreen() {
     );
   };
 
-  const handleMenuPress = (fileId, x, y) => {
+  const handleMenuPress = (fileId, fileName, x, y) => {
     setDropdownPosition({ x, y });
     setActiveDropdown(activeDropdown === fileId ? null : fileId);
+    setActiveFileName(fileName);
+
+    // Find the selected file by its ID
+    const file = structuredData.find((file) => file.id === fileId);
+
+    if (file) {
+      // Extract year, category, and filename from the file details
+      const parts = file.name.split("-");
+      const year = parts[0]; // Assuming the year is the first part of the name
+      const category = parts[1]; // Assuming the category is the second part of the name
+      const filename = parts.slice(2).join("-"); // The rest is the filename
+
+      // Assign values to hooks
+      setEditedYear(year);
+      setEditedCategory(category);
+      setFileExtension(filename.match(/\.[^/.]+$/)?.[0] || ""); // Extract extension or default to empty string
+    }
   };
+
+  useEffect(() => {
+    if (modalVisible == "") {
+      setActiveDropdown("");
+    }
+  }, [modalVisible]);
 
   const formatSize = (sizeInBytes) => {
     if (!sizeInBytes) return "--";
@@ -120,9 +149,24 @@ export default function FilesYCScreen() {
 
   const handleEditSubmit = async (fileId) => {
     try {
-      console.log(fileId);
+      // Input validation
+      if (!editedYear) {
+        Alert.alert("Validation Error", "Please select a valid year.");
+        return;
+      }
+
+      if (!editedCategory) {
+        Alert.alert("Validation Error", "Please select a valid category.");
+        return;
+      }
+
+      if (!editedFilename || editedFilename.trim() === "") {
+        Alert.alert("Validation Error", "Filename cannot be empty.");
+        return;
+      }
+
       const response = await axios.patch(
-        `${BASE_URL}/edit-file?email=${userEmail}`, // Add email to query string
+        `${BASE_URL}/edit-file?email=${loggedInEmail}`, // Add email to query string
         {
           fileId,
           year: editedYear,
@@ -135,6 +179,8 @@ export default function FilesYCScreen() {
       Alert.alert("Success", response.data.message);
       setEditDialogVisible(false);
       setActiveDropdown(null);
+      setEditedFilename("");
+
       await refreshFiles();
     } catch (error) {
       console.error("Error updating file:", error);
@@ -145,7 +191,7 @@ export default function FilesYCScreen() {
   const handleDeleteFile = async (fileId) => {
     try {
       const response = await axios.delete(
-        `${BASE_URL}/delete-file/${fileId}?email=${userEmail}` // Add email to query string
+        `${BASE_URL}/delete-file/${fileId}?email=${loggedInEmail}` // Add email to query string
       );
       Alert.alert("Success", response.data.message);
       setDeleteDialogVisible(false);
@@ -155,6 +201,23 @@ export default function FilesYCScreen() {
       console.error("Error deleting file:", error);
       Alert.alert("Error", "Failed to delete file.");
     }
+  };
+
+  const handleCancelDeleteFile = async (fileId) => {
+    Alert.alert(
+      "Deletion Canceled",
+      `The deletion of "${activeFileName}" has been canceled.`
+    );
+    setActiveDropdown(null);
+  };
+
+  const handleCancelEditFile = async () => {
+    Alert.alert(
+      "Edit Canceled",
+      `The edition of "${activeFileName}" has been canceled.`
+    );
+    setActiveDropdown(null);
+    setEditedFilename("");
   };
 
   const [yearsOption, setYearsOption] = useState([]);
@@ -180,8 +243,13 @@ export default function FilesYCScreen() {
 
       console.log("Original File Name:", fileName);
 
+      // Extract the file name part after the last hyphen
+      const nameParts = fileName.split("-");
+      const actualFileName = nameParts[nameParts.length - 1]; // Get the last part after the hyphen
+      console.log("Extracted File Name:", actualFileName);
+
       // Remove any existing extension before sanitizing
-      const nameWithoutExtension = fileName.replace(/\.[^/.]+$/, "");
+      const nameWithoutExtension = actualFileName.replace(/\.[^/.]+$/, "");
       console.log("File Name Without Extension:", nameWithoutExtension);
 
       // Sanitize file name to prevent directory issues
@@ -219,7 +287,8 @@ export default function FilesYCScreen() {
 
       // Map MIME type to file extension
       const mimeToExtension = {
-        "image/jpeg": ".jpg",
+        "image/jpg": ".jpg",
+        "image/jpeg": ".jpeg",
         "image/png": ".png",
         "application/pdf": ".pdf",
         "text/plain": ".txt",
@@ -230,9 +299,11 @@ export default function FilesYCScreen() {
       if (!extension) {
         throw new Error("Could not get the file's extension.");
       }
-
+      console.log(extension);
       // Append the correct extension to the sanitized file name
       const finalFilePath = `${filePath}${extension}`;
+      console.log(finalFilePath);
+
       await FileSystem.moveAsync({
         from: downloadResult.uri,
         to: finalFilePath,
@@ -248,12 +319,13 @@ export default function FilesYCScreen() {
         "Download Success",
         `${sanitizedFileName}${extension} has been downloaded.`
       );
+      setActiveDropdown(null);
     } catch (error) {
-      console.error("Download Error:", error.message || error);
       Alert.alert(
         "Error",
         `Failed to download the file: ${error.message || error}`
       );
+      setActiveDropdown(null);
     }
   };
 
@@ -274,7 +346,11 @@ export default function FilesYCScreen() {
                   <Pressable
                     key={file.id}
                     onPress={() =>
-                      openFile(extractFileName(file.name), file.directLink)
+                      openFile(
+                        file.id,
+                        extractFileName(file.name),
+                        file.directLink
+                      )
                     }
                   >
                     <FileC
@@ -284,7 +360,14 @@ export default function FilesYCScreen() {
                         "en-GB"
                       )}
                       fileSize={`${Math.round(file.size / 1024)} KB`}
-                      onMenuPress={(x, y) => handleMenuPress(file.id, x, y)} // Pass position for dropdown
+                      onMenuPress={(x, y) =>
+                        handleMenuPress(
+                          file.id,
+                          extractFileName(file.name),
+                          x,
+                          y
+                        )
+                      } // Pass position for dropdown
                     />
                   </Pressable>
                 ))
@@ -394,7 +477,11 @@ export default function FilesYCScreen() {
               />
               <Dialog.Button
                 label="Cancel"
-                onPress={() => setEditDialogVisible(false)}
+                onPress={() => {
+                  setEditDialogVisible(false);
+                  setActiveDropdown(null);
+                  handleCancelEditFile();
+                }}
               />
               <Dialog.Button
                 label="Submit"
@@ -411,7 +498,11 @@ export default function FilesYCScreen() {
               </Dialog.Description>
               <Dialog.Button
                 label="No"
-                onPress={() => setDeleteDialogVisible(false)}
+                onPress={() => {
+                  setDeleteDialogVisible(false);
+                  setActiveDropdown(null);
+                  handleCancelDeleteFile(activeDropdown);
+                }}
               />
               <Dialog.Button
                 label="Yes"
@@ -425,6 +516,9 @@ export default function FilesYCScreen() {
                 setModalVisible={setModalVisible}
                 imageUri={imageUri}
                 imageName={imageName}
+                fileId={modalImageId}
+                year={year}
+                category={category}
               />
             )}
           </ScrollView>
@@ -468,5 +562,11 @@ const styles = StyleSheet.create({
   menuText: {
     fontSize: wp(4),
     color: "#000",
+  },
+  noFilesText: {
+    marginTop: hp(3),
+    textAlign: "center",
+    color: "gray",
+    fontSize: hp(2),
   },
 });

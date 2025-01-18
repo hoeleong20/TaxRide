@@ -23,9 +23,11 @@ import * as FileSystem from "expo-file-system";
 import axios from "axios";
 import Dialog from "react-native-dialog";
 import DropDownPicker from "react-native-dropdown-picker";
+import { CommonActions } from "@react-navigation/native";
 
 import { BASE_URL } from "@env";
 import { FilesContext } from "../app/FilesContext";
+import { LoginContext } from "../app/LoginContext";
 
 export default function TabBarC({ state, descriptors, navigation }) {
   const { loggedInEmail } = useContext(LoginContext);
@@ -245,24 +247,51 @@ export default function TabBarC({ state, descriptors, navigation }) {
   const uploadImage = useCallback(async () => {
     console.log("Image URI before upload:", image);
     try {
-      console.log("Uploading Image");
       if (!image) {
         console.error("No image found, exiting upload.");
         return;
       }
-      console.log("Image state before upload:", image);
+
+      // Determine the file type from the URI
+      const fileInfo = await FileSystem.getInfoAsync(image);
+      if (!fileInfo.exists) {
+        throw new Error("The image file does not exist.");
+      }
+
+      console.log("File info:", fileInfo);
+
+      // Determine MIME type and map it to an extension
+      const mimeType = fileInfo.uri.split(".").pop(); // Get the file extension
+      const mimeToExtension = {
+        jpg: "image/jpg",
+        jpeg: "image/jpeg",
+        png: "image/png",
+        gif: "image/gif",
+      };
+
+      const mimeTypeKey = Object.keys(mimeToExtension).find((key) =>
+        fileInfo.uri.endsWith(key)
+      );
+
+      const fileExtension = mimeTypeKey ? `.${mimeTypeKey}` : ".jpg"; // Default to .jpg if type is unknown
+      const contentType = mimeToExtension[mimeTypeKey] || "image/jpg";
+
+      console.log("File extension and type determined:", {
+        fileExtension,
+        contentType,
+      });
 
       const formData = new FormData();
       formData.append("file", {
         uri: image,
-        name: `${year}-${category}-${filename}.jpg`,
-        type: "image/jpeg",
+        name: `${year}-${category}-${filename}${fileExtension}`,
+        type: contentType,
       });
 
       console.log("FormData prepared:", formData);
 
       const response = await axios.post(
-        `${BASE_URL}/upload?email=${loggedInEmail}`, // Add email to query
+        `${BASE_URL}/upload?email=${loggedInEmail}`,
         formData,
         {
           headers: {
@@ -293,7 +322,7 @@ export default function TabBarC({ state, descriptors, navigation }) {
             JSON.parse(await AsyncStorage.getItem("localFiles")) || [];
           localFiles.push({
             uri: image,
-            name: `${year}-${category}-${filename}.jpg`,
+            name: `${year}-${category}-${filename}${fileExtension}`,
           });
           await AsyncStorage.setItem("localFiles", JSON.stringify(localFiles));
 
@@ -337,11 +366,41 @@ export default function TabBarC({ state, descriptors, navigation }) {
         if (!hasSpace) break; // Stop if we detect insufficient space
 
         const file = files[i];
+        const fileUri = file.uri;
+
+        // Determine file type from URI
+        const fileInfo = await FileSystem.getInfoAsync(fileUri);
+        if (!fileInfo.exists) {
+          console.warn(`File ${file.name} does not exist locally.`);
+          files.splice(i, 1); // Remove non-existent file
+          i--; // Adjust index after removal
+          continue;
+        }
+
+        // Extract file extension and MIME type
+        const mimeType = fileUri.split(".").pop(); // Get the file extension
+        const mimeToExtension = {
+          jpg: "image/jpg",
+          jpeg: "image/jpeg",
+          png: "image/png",
+          gif: "image/gif",
+        };
+
+        const mimeTypeKey = Object.keys(mimeToExtension).find((key) =>
+          fileUri.endsWith(key)
+        );
+
+        const fileExtension = mimeTypeKey ? `.${mimeTypeKey}` : ".jpg"; // Default to .jpg if unknown
+        const contentType = mimeToExtension[mimeTypeKey] || "image/jpg";
+
+        const sanitizedFileName = file.name.replace(/\.[^/.]+$/, ""); // Remove existing extension
+        const finalFileName = `${sanitizedFileName}${fileExtension}`; // Add determined extension
+
         const formData = new FormData();
         formData.append("file", {
-          uri: file.uri,
-          name: file.name,
-          type: "image/jpeg",
+          uri: fileUri,
+          name: finalFileName,
+          type: contentType,
         });
 
         try {
@@ -354,29 +413,32 @@ export default function TabBarC({ state, descriptors, navigation }) {
           );
 
           if (response.status === 200) {
-            console.log(`File ${file.name} uploaded successfully.`);
+            console.log(`File ${finalFileName} uploaded successfully.`);
             files.splice(i, 1); // Remove successfully uploaded file
             i--; // Adjust index after removal
             await refreshFiles();
             successfullyUploadedCount++; // Increment success count
           } else if (response.status === 507) {
             console.warn(
-              `Google Drive has insufficient space. File ${file.name} not uploaded.`
+              `Google Drive has insufficient space. File ${finalFileName} not uploaded.`
             );
             hasSpace = false; // Set flag to stop further uploads
           } else {
             console.warn(
-              `File ${file.name} could not be uploaded. Retrying later.`
+              `File ${finalFileName} could not be uploaded. Retrying later.`
             );
           }
         } catch (error) {
           if (error.response && error.response.status === 507) {
             console.warn(
-              `Google Drive has insufficient space. File ${file.name} not uploaded.`
+              `Google Drive has insufficient space. File ${finalFileName} not uploaded.`
             );
             hasSpace = false; // Set flag to stop further uploads
           } else {
-            console.error(`Error uploading file ${file.name}:`, error.message);
+            console.error(
+              `Error uploading file ${finalFileName}:`,
+              error.message
+            );
           }
         }
       }
@@ -437,7 +499,13 @@ export default function TabBarC({ state, descriptors, navigation }) {
             });
 
             if (!isFocused && !event.defaultPrevented) {
-              navigation.navigate(route.name);
+              // Clear the navigation stack for the target tab
+              navigation.dispatch(
+                CommonActions.reset({
+                  index: 0,
+                  routes: [{ name: route.name }],
+                })
+              );
             }
           }
         };

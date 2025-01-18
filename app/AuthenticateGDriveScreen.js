@@ -16,8 +16,9 @@ import {
 } from "react-native-responsive-screen";
 import ButtonC from "../components/ButtonC";
 import BackButtonC from "../components/BackButtonC";
-import { FilesContext } from "../app/FilesContext";
+import { FilesContext } from "./FilesContext";
 import { BASE_URL } from "@env";
+import { LoginContext } from "./LoginContext";
 
 const gdriveLogo = require("../assets/gdrive.png");
 

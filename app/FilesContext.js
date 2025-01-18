@@ -1,5 +1,6 @@
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect, useContext } from "react";
 import { BASE_URL } from "@env";
+import { LoginContext } from "./LoginContext";
 
 export const FilesContext = createContext();
 
@@ -9,6 +10,10 @@ export const FilesProvider = ({ children }) => {
   const [structuredData, setStructuredData] = useState([]);
 
   const fetchFilesFromGDrive = async () => {
+    if (!loggedInEmail) {
+      return;
+    }
+
     try {
       const response = await fetch(`${BASE_URL}/files?email=${loggedInEmail}`);
       if (response.ok) {
@@ -34,7 +39,7 @@ export const FilesProvider = ({ children }) => {
 
   // Log whenever `structuredData` updates
   useEffect(() => {
-    console.log("structuredData updated:", structuredData);
+    // console.log("structuredData updated:", structuredData);
   }, [structuredData]);
 
   return (

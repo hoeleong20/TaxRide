@@ -12,7 +12,7 @@ import {
   Alert,
 } from "react-native";
 import ImageViewer from "react-native-image-zoom-viewer";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useContext } from "react";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -26,6 +26,9 @@ import DropDownPicker from "react-native-dropdown-picker";
 import * as FileSystem from "expo-file-system";
 import * as MediaLibrary from "expo-media-library";
 
+import { FilesContext } from "../app/FilesContext";
+import { LoginContext } from "../app/LoginContext";
+
 export default function ImagePreviewC({
   modalVisible,
   setModalVisible,
@@ -35,6 +38,9 @@ export default function ImagePreviewC({
   year,
   category,
 }) {
+  const { loggedInEmail } = useContext(LoginContext);
+  const { refreshFiles } = useContext(FilesContext);
+
   const [aspectRatio, setAspectRatio] = useState(1);
   const { width: screenWidth } = Dimensions.get("window");
 
@@ -50,7 +56,9 @@ export default function ImagePreviewC({
   const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
   const [editedYear, setEditedYear] = useState(year);
   const [editedCategory, setEditedCategory] = useState(category);
-  const [editedFilename, setEditedFilename] = useState(imageName);
+  const [editedFilename, setEditedFilename] = useState();
+  const [currentImageName, setCurrentImageName] = useState(imageName);
+  const [fileExtension, setFileExtension] = useState("");
 
   const [openYear, setOpenYear] = useState(false);
   const [openCategory, setOpenCategory] = useState(false);
@@ -96,8 +104,18 @@ export default function ImagePreviewC({
 
   const toggleHeader = () => {
     if (headerVisible) {
+      // console.log(
+      //   modalVisible,
+      //   imageUri,
+      //   imageName,
+      //   fileId,
+      //   year,
+      //   category
+      // );
+      setDropdownVisible(false);
       hideHeaderWithAnimation();
     } else {
+      setDropdownVisible(false);
       showHeaderWithAnimation();
     }
   };
@@ -113,7 +131,6 @@ export default function ImagePreviewC({
       resetHeader();
       setEditedYear(year);
       setEditedCategory(category);
-      setEditedFilename(imageName);
       // console.log("file id ", fileId);
       // console.log("activeDropdown", activeDropdown);
     }
@@ -131,7 +148,7 @@ export default function ImagePreviewC({
         setEditDialogVisible(true);
         break;
       case "download":
-        downloadFile(imageUri, imageName);
+        downloadFile(imageUri, currentImageName);
         break;
       case "delete":
         setDeleteDialogVisible(true);
@@ -166,7 +183,8 @@ export default function ImagePreviewC({
         downloadResult.headers["Content-Type"] ||
         downloadResult.headers["content-type"];
       const mimeToExtension = {
-        "image/jpeg": ".jpg",
+        "image/jpg": ".jpg",
+        "image/jpeg": ".jpeg",
         "image/png": ".png",
         "application/pdf": ".pdf",
         "text/plain": ".txt",
@@ -195,6 +213,61 @@ export default function ImagePreviewC({
     }
   };
 
+  const handleEditSubmit = async (fileId) => {
+    try {
+      if (!activeDropdown) {
+        Alert.alert("Error", "No file selected for edit.");
+        return;
+      }
+      fileId = activeDropdown;
+
+      // Input validation
+      if (!editedYear) {
+        Alert.alert("Validation Error", "Please select a valid year.");
+        return;
+      }
+
+      if (!editedCategory) {
+        Alert.alert("Validation Error", "Please select a valid category.");
+        return;
+      }
+
+      if (!editedFilename || editedFilename.trim() === "") {
+        Alert.alert("Validation Error", "Filename cannot be empty.");
+        return;
+      }
+
+      // Ensure the edited filename retains the correct extension
+      const finalFilename = editedFilename.endsWith(fileExtension)
+        ? editedFilename
+        : `${editedFilename}${fileExtension}`;
+
+      console.log(
+        `Submitting edited file with ID: ${fileId}, Filename: ${finalFilename}`
+      );
+
+      const response = await axios.patch(
+        `${BASE_URL}/edit-file?email=${loggedInEmail}`, // Add email to query string
+        {
+          fileId,
+          year: editedYear,
+          category: editedCategory,
+          filename: editedFilename,
+        }
+      );
+      console.log(response);
+
+      Alert.alert("Success", response.data.message);
+      setEditDialogVisible(false);
+      await refreshFiles();
+      setCurrentImageName(editedFilename);
+      setEditedFilename("");
+    } catch (error) {
+      console.error("Error updating file:", error);
+      Alert.alert("Error", "Failed to update file details.");
+    }
+  };
+
   const handleDeleteFile = async () => {
     if (!activeDropdown) {
       Alert.alert("Error", "No file selected for deletion.");
@@ -203,11 +276,11 @@ export default function ImagePreviewC({
 
     try {
       const response = await axios.delete(
-        `${BASE_URL}/delete-file/${activeDropdown}`
+        `${BASE_URL}/delete-file/${activeDropdown}?email=${loggedInEmail}`
       );
       Alert.alert("Success", response.data.message);
       setDeleteDialogVisible(false);
-      setActiveDropdown(null);
+      await refreshFiles();
     } catch (error) {
       console.error("Error deleting file:", error);
       if (error.response && error.response.status === 404) {
@@ -219,6 +292,22 @@ export default function ImagePreviewC({
         Alert.alert("Error", "Failed to delete the file.");
       }
     }
+  };
+
+  const handleCancelDeleteFile = async () => {
+    Alert.alert(
+      "Deletion Canceled",
+      `The deletion of "${currentImageName}" has been canceled.`
+    );
+    setActiveDropdown(null);
+  };
+
+  const handleCancelEditFile = async () => {
+    Alert.alert(
+      "Edit Canceled",
+      `The edition of "${currentImageName}" has been canceled.`
+    );
+    setActiveDropdown(null);
   };
 
   const image = [
@@ -261,7 +350,7 @@ export default function ImagePreviewC({
       >
         <Ionicons name="close-sharp" size={wp(8)} color="white" />
       </TouchableOpacity>
-      <Text style={styles.imageName}>{imageName}</Text>
+      <Text style={styles.imageName}>{currentImageName}</Text>
       <TouchableOpacity
         onPress={(e) =>
           handleThreeDotsPress(
@@ -327,7 +416,10 @@ export default function ImagePreviewC({
             open={openYear}
             onOpen={onYearOpen}
             value={editedYear}
-            items={yearsOption.map((yr) => ({ label: yr, value: yr }))}
+            items={[
+              { label: editedYear, value: editedYear }, // Add current value explicitly as the first item
+              ...yearsOption.filter((yr) => yr.value !== editedYear), // Append the rest, excluding the current value
+            ]}
             setOpen={setOpenYear}
             setValue={setEditedYear}
             placeholder="Select Year"
@@ -340,10 +432,10 @@ export default function ImagePreviewC({
             open={openCategory}
             onOpen={onCategoryOpen}
             value={editedCategory}
-            items={categoriesOption.map((cat) => ({
-              label: cat,
-              value: cat,
-            }))}
+            items={[
+              { label: editedCategory, value: editedCategory }, // Add current value explicitly as the first item
+              ...categoriesOption.filter((cat) => cat.value !== editedCategory), // Append the rest, excluding the current value
+            ]}
             setOpen={setOpenCategory}
             setValue={setEditedCategory}
             placeholder="Select Category"
@@ -359,7 +451,10 @@ export default function ImagePreviewC({
           />
           <Dialog.Button
             label="Cancel"
-            onPress={() => setEditDialogVisible(false)}
+            onPress={() => {
+              setEditDialogVisible(false);
+              handleCancelEditFile();
+            }}
           />
           <Dialog.Button label="Submit" onPress={() => handleEditSubmit()} />
         </Dialog.Container>
@@ -373,7 +468,10 @@ export default function ImagePreviewC({
           </Dialog.Description>
           <Dialog.Button
             label="No"
-            onPress={() => setDeleteDialogVisible(false)}
+            onPress={() => {
+              setDeleteDialogVisible(false);
+              handleCancelDeleteFile();
+            }}
           />
           <Dialog.Button label="Yes" onPress={() => handleDeleteFile()} />
         </Dialog.Container>
