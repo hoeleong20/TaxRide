@@ -45,10 +45,10 @@ export default function ImagePreviewC({
   const { width: screenWidth } = Dimensions.get("window");
 
   const [headerVisible, setHeaderVisible] = useState(true);
-  const [activeDropdown, setActiveDropdown] = useState(fileId);
 
-  // console.log("file id ", fileId);
-  // console.log("activeDropdown", activeDropdown);
+  // console.log("file id :", fileId);
+  // console.log("file year :", year);
+  // console.log("file category :", category);
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({ x: 0, y: 0 });
 
@@ -132,7 +132,6 @@ export default function ImagePreviewC({
       setEditedYear(year);
       setEditedCategory(category);
       // console.log("file id ", fileId);
-      // console.log("activeDropdown", activeDropdown);
     }
   }, [modalVisible, year, category, imageName, fileId]);
 
@@ -213,13 +212,12 @@ export default function ImagePreviewC({
     }
   };
 
-  const handleEditSubmit = async (fileId) => {
+  const handleEditSubmit = async () => {
     try {
-      if (!activeDropdown) {
+      if (!fileId) {
         Alert.alert("Error", "No file selected for edit.");
         return;
       }
-      fileId = activeDropdown;
 
       // Input validation
       if (!editedYear) {
@@ -255,7 +253,7 @@ export default function ImagePreviewC({
           filename: editedFilename,
         }
       );
-      console.log(response);
+      // console.log(response);
 
       Alert.alert("Success", response.data.message);
       setEditDialogVisible(false);
@@ -269,18 +267,19 @@ export default function ImagePreviewC({
   };
 
   const handleDeleteFile = async () => {
-    if (!activeDropdown) {
+    if (!fileId) {
       Alert.alert("Error", "No file selected for deletion.");
       return;
     }
 
     try {
       const response = await axios.delete(
-        `${BASE_URL}/delete-file/${activeDropdown}?email=${loggedInEmail}`
+        `${BASE_URL}/delete-file/${fileId}?email=${loggedInEmail}`
       );
       Alert.alert("Success", response.data.message);
       setDeleteDialogVisible(false);
       await refreshFiles();
+      setModalVisible(false);
     } catch (error) {
       console.error("Error deleting file:", error);
       if (error.response && error.response.status === 404) {
@@ -299,7 +298,6 @@ export default function ImagePreviewC({
       "Deletion Canceled",
       `The deletion of "${currentImageName}" has been canceled.`
     );
-    setActiveDropdown(null);
   };
 
   const handleCancelEditFile = async () => {
@@ -307,7 +305,6 @@ export default function ImagePreviewC({
       "Edit Canceled",
       `The edition of "${currentImageName}" has been canceled.`
     );
-    setActiveDropdown(null);
   };
 
   const image = [
@@ -417,8 +414,18 @@ export default function ImagePreviewC({
             onOpen={onYearOpen}
             value={editedYear}
             items={[
-              { label: editedYear, value: editedYear }, // Add current value explicitly as the first item
-              ...yearsOption.filter((yr) => yr.value !== editedYear), // Append the rest, excluding the current value
+              {
+                key: `editedYear-${editedYear}`,
+                label: editedYear,
+                value: editedYear,
+              },
+              ...yearsOption
+                .filter((yr) => yr.value !== editedYear)
+                .map((yr) => ({
+                  key: `year-${yr.value}`, // Ensure a unique key
+                  label: yr.label,
+                  value: yr.value,
+                })),
             ]}
             setOpen={setOpenYear}
             setValue={setEditedYear}
@@ -433,8 +440,18 @@ export default function ImagePreviewC({
             onOpen={onCategoryOpen}
             value={editedCategory}
             items={[
-              { label: editedCategory, value: editedCategory }, // Add current value explicitly as the first item
-              ...categoriesOption.filter((cat) => cat.value !== editedCategory), // Append the rest, excluding the current value
+              {
+                key: `editedCategory-${editedCategory}`,
+                label: editedCategory,
+                value: editedCategory,
+              },
+              ...categoriesOption
+                .filter((cat) => cat.value !== editedCategory)
+                .map((cat) => ({
+                  key: `category-${cat.value}`,
+                  label: cat.label,
+                  value: cat.value,
+                })),
             ]}
             setOpen={setOpenCategory}
             setValue={setEditedCategory}

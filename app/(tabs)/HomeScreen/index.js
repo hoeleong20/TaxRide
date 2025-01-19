@@ -37,9 +37,8 @@ import { BASE_URL } from "@env";
 import axios from "axios";
 
 export default function HomeScreen() {
-  const { loggedInEmail } = useContext(LoginContext);
-
-  const [name, setName] = useState("Ayush Srivastava");
+  const { loggedInEmail, loggedInName } = useContext(LoginContext);
+  const name = loggedInName;
   const [cloudStoragePerc, setCloudStoragePerc] = useState(0);
   const [cloudStorageText, setCloudStorageText] = useState("Loading...");
   const [internalStoragePerc, setInternalStoragePerc] = useState(0);
@@ -50,8 +49,11 @@ export default function HomeScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [imageUri, setImageUri] = useState("");
 
+  const [dropdownTriger, setDropdownTrigger] = useState(false);
+
   const [activeDropdown, setActiveDropdown] = useState("");
   const [activeFileName, setActiveFileName] = useState("");
+  const [activeFileId, setActiveFileId] = useState("");
   const [dropdownPosition, setDropdownPosition] = useState({ x: 0, y: 0 });
 
   const [editDialogVisible, setEditDialogVisible] = useState(false);
@@ -147,19 +149,28 @@ export default function HomeScreen() {
     setEditedYear(year); // Extract and set year
     setEditedCategory(category); // Extract and set category
     setImageUri(file.directLink);
+    setActiveFileId(file.id);
+    console.log("file.name:", file.name);
 
-    setImageName(rest.join("-")); // Set only the filename
-    setFileExtension(file.name.match(/\.[^/.]+$/)?.[0] || ""); // Extract extension or default to empty string
+    const extension = file.name.match(/\.[^/.]+$/)?.[0] || ""; // Extract extension
+    console.log("Extracted fileExtension:", extension);
+    setFileExtension(extension); // Set the state with the extension
+
+    setImageName(extractFileName(file.name)); // Set only the filename
     setModalVisible(true);
-
-    setActiveDropdown(null);
+    setDropdownTrigger(false);
   };
 
   // Extract filename without year and category
+  // Extract filename without year, category, and extension
   const extractFileName = (fullName) => {
     const parts = fullName.split("-");
     const nameWithoutYearAndCategory = parts.slice(2).join("-"); // Skip the year and category
-    return nameWithoutYearAndCategory.replace(/\.[^/.]+$/, ""); // Remove the file extension
+    const nameWithoutExtension = nameWithoutYearAndCategory.replace(
+      /\.[^/.]+$/,
+      ""
+    ); // Remove the file extension
+    return nameWithoutExtension;
   };
 
   // Fetch recent files
@@ -190,7 +201,8 @@ export default function HomeScreen() {
 
   const handleMenuPress = (fileId, fileName, x, y) => {
     setDropdownPosition({ x, y });
-    setActiveDropdown(activeDropdown === fileId ? null : fileId);
+    setDropdownTrigger(true);
+    setActiveDropdown(fileId);
     setActiveFileName(fileName);
 
     // Find the selected file by its ID
@@ -212,22 +224,22 @@ export default function HomeScreen() {
 
   const handleEditSubmit = async (fileId) => {
     try {
-          // Input validation
-    if (!editedYear) {
-      Alert.alert("Validation Error", "Please select a valid year.");
-      return;
-    }
+      // Input validation
+      if (!editedYear) {
+        Alert.alert("Validation Error", "Please select a valid year.");
+        return;
+      }
 
-    if (!editedCategory) {
-      Alert.alert("Validation Error", "Please select a valid category.");
-      return;
-    }
+      if (!editedCategory) {
+        Alert.alert("Validation Error", "Please select a valid category.");
+        return;
+      }
 
-    if (!editedFilename || editedFilename.trim() === "") {
-      Alert.alert("Validation Error", "Filename cannot be empty.");
-      return;
-    }
-    
+      if (!editedFilename || editedFilename.trim() === "") {
+        Alert.alert("Validation Error", "Filename cannot be empty.");
+        return;
+      }
+
       const updatedFilename = editedFilename.endsWith(fileExtension)
         ? editedFilename
         : `${editedFilename}${fileExtension}`;
@@ -244,7 +256,7 @@ export default function HomeScreen() {
 
       Alert.alert("Success", response.data.message);
       setEditDialogVisible(false);
-      setActiveDropdown(null);
+      setDropdownTrigger(false);
 
       // Update state to reflect changes in ImagePreviewC
       setImageName(updatedFilename);
@@ -268,7 +280,8 @@ export default function HomeScreen() {
       );
       Alert.alert("Success", response.data.message);
       setDeleteDialogVisible(false);
-      setActiveDropdown(null);
+      setDropdownTrigger(false);
+
       await refreshFiles();
     } catch (error) {
       console.error("Error deleting file:", error);
@@ -281,7 +294,7 @@ export default function HomeScreen() {
       "Deletion Canceled",
       `The deletion of "${activeFileName}" has been canceled.`
     );
-    setActiveDropdown(null);
+    setDropdownTrigger(false);
   };
 
   const handleCancelEditFile = async () => {
@@ -290,12 +303,13 @@ export default function HomeScreen() {
       `The edition of "${activeFileName}" has been canceled.`
     );
     setEditedFilename("");
-    setActiveDropdown(null);
+    setDropdownTrigger(false);
   };
 
   const downloadFile = async (fileUri, fileName) => {
     try {
       console.log("Original File Name:", fileName);
+      console.log("Original fileUri:", fileUri);
 
       // Extract the actual file name (removing year and category)
       const parts = fileName.split("-");
@@ -317,6 +331,7 @@ export default function HomeScreen() {
             text: "Cancel",
             onPress: () => {
               console.log("Download canceled");
+              setDropdownTrigger(false);
               Alert.alert(
                 "Download Canceled",
                 `The download of "${sanitizedFileName}" has been canceled.`
@@ -394,8 +409,7 @@ export default function HomeScreen() {
                 "Download Success",
                 `${sanitizedFileName}${extension} has been downloaded.`
               );
-
-              setActiveDropdown(null);
+              setDropdownTrigger(false);
             },
           },
         ]
@@ -412,7 +426,7 @@ export default function HomeScreen() {
   return (
     <TouchableWithoutFeedback
       onPress={() => {
-        setActiveDropdown(null);
+        setDropdownTrigger(false);
         Keyboard.dismiss();
       }}
     >
@@ -469,30 +483,33 @@ export default function HomeScreen() {
                 </View>
               </View>
               <View>
-                {recentFiles.map((file, index) => (
-                  <Pressable key={file.id} onPress={() => openFile(file)}>
-                    <FileC
-                      fileName={extractFileName(file.name)}
-                      fileDate={new Date(file.modifiedTime).toLocaleDateString(
-                        "en-GB",
-                        {
+                {recentFiles.length > 0 ? (
+                  recentFiles.map((file, index) => (
+                    <Pressable key={file.id} onPress={() => openFile(file)}>
+                      <FileC
+                        fileName={extractFileName(file.name)}
+                        fileDate={new Date(
+                          file.modifiedTime
+                        ).toLocaleDateString("en-GB", {
                           day: "2-digit",
                           month: "short",
                           year: "numeric",
+                        })}
+                        fileSize={`${Math.round(file.size / 1024)} KB`} // Convert size to KB
+                        onMenuPress={(x, y) =>
+                          handleMenuPress(
+                            file.id,
+                            extractFileName(file.name),
+                            x - wp(4),
+                            index === 1 ? y - hp(25) : y - hp(3) // Adjust y position for the second file
+                          )
                         }
-                      )}
-                      fileSize={`${Math.round(file.size / 1024)} KB`} // Convert size to KB
-                      onMenuPress={(x, y) =>
-                        handleMenuPress(
-                          file.id,
-                          extractFileName(file.name),
-                          x - wp(4),
-                          index === 1 ? y - hp(25) : y - hp(3) // Adjust y position for the second file
-                        )
-                      }
-                    />
-                  </Pressable>
-                ))}
+                      />
+                    </Pressable>
+                  ))
+                ) : (
+                  <Text style={styles.noFilesText}>No files available.</Text>
+                )}
               </View>
             </View>
           </View>
@@ -503,13 +520,14 @@ export default function HomeScreen() {
               setModalVisible={setModalVisible}
               imageUri={imageUri}
               imageName={imageName}
-              fileId={activeDropdown}
+              fileId={activeFileId}
+              year={editedYear}
+              category={editedCategory}
               fileYear={editedYear}
-              fileCategory={editedCategory}
             />
           )}
 
-          {activeDropdown && (
+          {dropdownTriger && (
             <View
               style={[
                 styles.dropdownMenu,
@@ -525,8 +543,18 @@ export default function HomeScreen() {
               <Pressable
                 style={styles.menuItem}
                 onPress={() => {
-                  const file = recentFiles.find((f) => f.id === activeDropdown);
-                  downloadFile(file.directLink, file.name);
+                  const file = recentFiles.find((f) => f.id);
+                  console.log("file details", file);
+
+                  if (file) {
+                    downloadFile(file.directLink, file.name);
+                  } else {
+                    Alert.alert(
+                      "Error",
+                      "Failed to find the file to download."
+                    );
+                    console.error("File not found for download.");
+                  }
                 }}
               >
                 <Text style={styles.menuText}>Download</Text>
@@ -752,5 +780,11 @@ const styles = StyleSheet.create({
   menuText: {
     fontSize: wp(4),
     color: "#000",
+  },
+  noFilesText: {
+    marginTop: hp(3),
+    textAlign: "center",
+    color: "gray",
+    fontSize: hp(2),
   },
 });
