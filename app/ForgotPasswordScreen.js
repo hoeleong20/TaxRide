@@ -24,7 +24,7 @@ const logoImg = require("../assets/taxride_logo.png");
 import { BASE_URL } from "@env";
 
 export default function ForgotPasswordScreen() {
-  const [email, setEmail] = useState("hoeleongjob01@gmail.com");
+  const [email, setEmail] = useState("");
   const [tooltip, setTooltip] = useState({}); // Object to store validation messages
 
   const validateField = (fieldName, value) => {
