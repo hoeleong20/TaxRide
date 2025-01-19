@@ -1,4 +1,4 @@
-import { Text, View, StyleSheet, Pressable } from "react-native";
+import { View, StyleSheet, Pressable, Alert } from "react-native";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -6,9 +6,13 @@ import {
 import Icon from "react-native-vector-icons/Ionicons";
 
 export default function NotificationButtonC() {
+  const handleNotificationPress = () => {
+    Alert.alert("Notification", "No notifications available for now.");
+  };
+
   return (
     <View style={{ display: "flex", flexDirection: "row" }}>
-      <Pressable onPress={() => console.log("1")}>
+      <Pressable onPress={handleNotificationPress}>
         <Icon name="notifications-outline" size={wp(9)} />
       </Pressable>
     </View>

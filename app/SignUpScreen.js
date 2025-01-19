@@ -25,8 +25,8 @@ const logoImg = require("../assets/taxride_logo.png");
 import { BASE_URL } from "@env";
 
 export default function SignUpScreen() {
-  const [name, setName] = useState("chew hoe leong");
-  const [email, setEmail] = useState("chewhl2002@gmail.com");
+  const [name, setName] = useState("Chew Hoe Leong");
+  const [email, setEmail] = useState("hoeleongjob01@gmail.com");
   const [password, setPassword] = useState("Pass123.");
   const [cfmPassword, setCfmPassword] = useState("Pass123.");
   const [tooltip, setTooltip] = useState({}); // Object to store validation messages

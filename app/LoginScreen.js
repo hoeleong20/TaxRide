@@ -29,8 +29,8 @@ export default function LoginScreen() {
   const { setIsLoggedIn } = useContext(LoginContext);
   const { setLoggedInEmail } = useContext(LoginContext);
 
-  const [email, setEmail] = useState("hoeleongjob01@gmail.com"); //hoeleongjob01      chewhl2002
-  const [password, setPassword] = useState("pass1234."); //pass1234     Pass123
+  const [email, setEmail] = useState("hoeleongjob01@gmail.com"); //hoeleongjob01      
+  const [password, setPassword] = useState("Pass123."); //     Pass123
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [tooltip, setTooltip] = useState({}); // Object to store validation messages
 

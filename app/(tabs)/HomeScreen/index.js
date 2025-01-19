@@ -32,7 +32,6 @@ import { LoginContext } from "../../LoginContext";
 import { Link } from "expo-router";
 
 const profileImage = require("../../../assets/userProfile.jpg");
-// const BASE_URL = "http://192.168.1.39:3000";
 import { BASE_URL } from "@env";
 import axios from "axios";
 

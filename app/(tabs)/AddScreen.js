@@ -4,7 +4,7 @@ import {
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
 
-const logoImg = require("../../assets/adaptive-icon.png");
+const logoImg = require("../../assets/taxride_logo.png");
 
 export default function AddScreen() {
   return (
