@@ -94,7 +94,6 @@ export default function FilesYCScreen() {
   }, [files, router]);
 
   const openFile = (fileId, fileName, fileUri) => {
-    console.log(fileName);
     if (!fileUri || !fileUri.startsWith("https://")) {
       Alert.alert("Invalid or inaccessible file URI.");
       return;
@@ -174,7 +173,6 @@ export default function FilesYCScreen() {
           filename: editedFilename,
         }
       );
-      console.log(response);
 
       Alert.alert("Success", response.data.message);
       setEditDialogVisible(false);
@@ -183,7 +181,6 @@ export default function FilesYCScreen() {
 
       await refreshFiles();
     } catch (error) {
-      console.error("Error updating file:", error);
       Alert.alert("Error", "Failed to update file details.");
     }
   };
@@ -198,7 +195,6 @@ export default function FilesYCScreen() {
       setActiveDropdown(null);
       await refreshFiles();
     } catch (error) {
-      console.error("Error deleting file:", error);
       Alert.alert("Error", "Failed to delete file.");
     }
   };
@@ -241,25 +237,19 @@ export default function FilesYCScreen() {
         throw new Error("File name is required for downloading.");
       }
 
-      console.log("Original File Name:", fileName);
-
       // Extract the file name part after the last hyphen
       const nameParts = fileName.split("-");
       const actualFileName = nameParts[nameParts.length - 1]; // Get the last part after the hyphen
-      console.log("Extracted File Name:", actualFileName);
 
       // Remove any existing extension before sanitizing
       const nameWithoutExtension = actualFileName.replace(/\.[^/.]+$/, "");
-      console.log("File Name Without Extension:", nameWithoutExtension);
 
       // Sanitize file name to prevent directory issues
       const sanitizedFileName = nameWithoutExtension.replace(/[^\w.-]/g, "_");
-      console.log("Sanitized File Name:", sanitizedFileName);
 
       // Define the file path
       const directoryPath = `${FileSystem.documentDirectory}downloads/`;
       const filePath = `${directoryPath}${sanitizedFileName}`;
-      console.log("Download Path:", filePath);
 
       // Ensure the directory exists
       const dirInfo = await FileSystem.getInfoAsync(directoryPath);
@@ -267,7 +257,6 @@ export default function FilesYCScreen() {
         await FileSystem.makeDirectoryAsync(directoryPath, {
           intermediates: true,
         });
-        console.log("Created Directory:", directoryPath);
       }
 
       // Request permissions
@@ -278,12 +267,10 @@ export default function FilesYCScreen() {
       }
 
       // Download the file
-      console.log(`Downloading from ${fileUri} to ${filePath}`);
       const downloadResult = await FileSystem.downloadAsync(fileUri, filePath);
 
       // Extract MIME type from headers
       const mimeType = downloadResult.headers["content-type"];
-      console.log("MIME Type:", mimeType);
 
       // Map MIME type to file extension
       const mimeToExtension = {
@@ -299,17 +286,13 @@ export default function FilesYCScreen() {
       if (!extension) {
         throw new Error("Could not get the file's extension.");
       }
-      console.log(extension);
       // Append the correct extension to the sanitized file name
       const finalFilePath = `${filePath}${extension}`;
-      console.log(finalFilePath);
 
       await FileSystem.moveAsync({
         from: downloadResult.uri,
         to: finalFilePath,
       });
-
-      console.log("Final File Path:", finalFilePath);
 
       // Save to MediaLibrary
       const asset = await MediaLibrary.createAssetAsync(finalFilePath);
@@ -398,7 +381,6 @@ export default function FilesYCScreen() {
                   style={styles.menuItem}
                   onPress={() => {
                     const file = files.find((f) => f.id === activeDropdown);
-                    console.log(file);
                     downloadFile(file.directLink, file.name);
                   }}
                 >

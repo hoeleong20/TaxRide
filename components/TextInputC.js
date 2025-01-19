@@ -20,7 +20,7 @@ export default function TextInputC({
     setIsMasked(!isMasked);
   };
   return (
-    <View onPress={() => console.log("1")} style={styles.TextInputContainer}>
+    <View style={styles.TextInputContainer}>
       <TextInput
         style={styles.input}
         placeholder={placeholderText}

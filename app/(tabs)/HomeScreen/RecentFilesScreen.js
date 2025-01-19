@@ -171,7 +171,6 @@ export default function FilesYCScreen() {
           filename: editedFilename,
         }
       );
-      console.log(response);
 
       Alert.alert("Success", response.data.message);
       setEditDialogVisible(false);
@@ -180,7 +179,6 @@ export default function FilesYCScreen() {
 
       await refreshFiles();
     } catch (error) {
-      console.error("Error updating file:", error);
       Alert.alert("Error", "Failed to update file details.");
     }
   };
@@ -195,7 +193,6 @@ export default function FilesYCScreen() {
       setActiveDropdown(null);
       await refreshFiles();
     } catch (error) {
-      console.error("Error deleting file:", error);
       Alert.alert("Error", "Failed to delete file.");
     }
   };
@@ -227,8 +224,6 @@ export default function FilesYCScreen() {
       // Assign values to hooks
       setEditedYear(year);
       setEditedCategory(category);
-      console.log(editedYear);
-      console.log(editedCategory);
     }
   };
 

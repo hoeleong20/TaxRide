@@ -110,7 +110,6 @@ export default function HomeScreen() {
 
         setCloudStorageText(`${usedGB} GB of ${totalGB} GB used`);
       } catch (error) {
-        console.error("Error fetching cloud storage:", error.message);
         Alert.alert("Error", "Failed to load cloud storage data.");
       }
     };
@@ -135,7 +134,6 @@ export default function HomeScreen() {
 
         setInternalStorageText(`${usedGB} GB of ${totalGB} GB used`);
       } catch (error) {
-        console.error("Error fetching internal storage:", error.message);
         Alert.alert("Error", "Failed to load internal storage data.");
       }
     };
@@ -149,10 +147,8 @@ export default function HomeScreen() {
     setEditedCategory(category); // Extract and set category
     setImageUri(file.directLink);
     setActiveFileId(file.id);
-    console.log("file.name:", file.name);
 
     const extension = file.name.match(/\.[^/.]+$/)?.[0] || ""; // Extract extension
-    console.log("Extracted fileExtension:", extension);
     setFileExtension(extension); // Set the state with the extension
 
     setImageName(extractFileName(file.name)); // Set only the filename
@@ -189,7 +185,6 @@ export default function HomeScreen() {
       // Take the top two most recent files
       setRecentFiles(sortedFiles.slice(0, 2));
     } catch (error) {
-      console.error("Error fetching recent files:", error.message);
       Alert.alert("Error", "Failed to load recent files.");
     }
   };
@@ -265,15 +260,12 @@ export default function HomeScreen() {
 
       await refreshFiles();
     } catch (error) {
-      console.error("Error updating file:", error);
       Alert.alert("Error", "Failed to update file details.");
     }
   };
 
   const handleDeleteFile = async (fileId) => {
     try {
-      console.log("Deleting file with ID:", fileId); // Add this to debug
-
       const response = await axios.delete(
         `${BASE_URL}/delete-file/${fileId}?email=${loggedInEmail}` // Add email to query string
       );
@@ -283,7 +275,6 @@ export default function HomeScreen() {
 
       await refreshFiles();
     } catch (error) {
-      console.error("Error deleting file:", error);
       Alert.alert("Error", "Failed to delete file.");
     }
   };
@@ -307,19 +298,14 @@ export default function HomeScreen() {
 
   const downloadFile = async (fileUri, fileName) => {
     try {
-      console.log("Original File Name:", fileName);
-      console.log("Original fileUri:", fileUri);
-
       // Extract the actual file name (removing year and category)
       const parts = fileName.split("-");
       const actualFileName = parts.slice(2).join("-"); // Skip the first two parts (year and category)
       // Remove any existing extension before sanitizing
       const nameWithoutExtension = actualFileName.replace(/\.[^/.]+$/, "");
-      console.log("File Name Without Extension:", nameWithoutExtension);
 
       // Sanitize file name to prevent directory issues
       const sanitizedFileName = nameWithoutExtension.replace(/[^\w.-]/g, "_");
-      console.log("Sanitized File Name:", sanitizedFileName);
 
       // Alert user to confirm download
       Alert.alert(
@@ -329,7 +315,6 @@ export default function HomeScreen() {
           {
             text: "Cancel",
             onPress: () => {
-              console.log("Download canceled");
               setDropdownTrigger(false);
               Alert.alert(
                 "Download Canceled",
@@ -344,7 +329,6 @@ export default function HomeScreen() {
               // Define the file path
               const directoryPath = `${FileSystem.documentDirectory}downloads/`;
               const filePath = `${directoryPath}${sanitizedFileName}`;
-              console.log("Download Path:", filePath);
 
               // Ensure the directory exists
               const dirInfo = await FileSystem.getInfoAsync(directoryPath);
@@ -352,7 +336,6 @@ export default function HomeScreen() {
                 await FileSystem.makeDirectoryAsync(directoryPath, {
                   intermediates: true,
                 });
-                console.log("Created Directory:", directoryPath);
               }
 
               // Request permissions
@@ -366,7 +349,6 @@ export default function HomeScreen() {
               }
 
               // Download the file
-              console.log(`Downloading from ${fileUri} to ${filePath}`);
               const downloadResult = await FileSystem.downloadAsync(
                 fileUri,
                 filePath
@@ -374,7 +356,6 @@ export default function HomeScreen() {
 
               // Extract MIME type from headers
               const mimeType = downloadResult.headers["content-type"];
-              console.log("MIME Type:", mimeType);
 
               // Map MIME type to file extension
               const mimeToExtension = {
@@ -398,8 +379,6 @@ export default function HomeScreen() {
                 to: finalFilePath,
               });
 
-              console.log("Final File Path:", finalFilePath);
-
               // Save to MediaLibrary
               const asset = await MediaLibrary.createAssetAsync(finalFilePath);
               await MediaLibrary.createAlbumAsync("TaxRide", asset, false);
@@ -414,7 +393,6 @@ export default function HomeScreen() {
         ]
       );
     } catch (error) {
-      console.error("Download Error:", error.message || error);
       Alert.alert(
         "Error",
         `Failed to download the file: ${error.message || error}`
@@ -543,7 +521,6 @@ export default function HomeScreen() {
                 style={styles.menuItem}
                 onPress={() => {
                   const file = recentFiles.find((f) => f.id);
-                  console.log("file details", file);
 
                   if (file) {
                     downloadFile(file.directLink, file.name);
@@ -552,7 +529,6 @@ export default function HomeScreen() {
                       "Error",
                       "Failed to find the file to download."
                     );
-                    console.error("File not found for download.");
                   }
                 }}
               >

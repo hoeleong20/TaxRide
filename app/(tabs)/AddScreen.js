@@ -10,18 +10,6 @@ export default function AddScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <Text>Add File</Text>
-
-      <View>
-        <Pressable onPress={() => console.log("1")} style={styles.rowContainer}>
-          <Text>Take Photo</Text>
-        </Pressable>
-        <Pressable onPress={() => console.log("1")} style={styles.rowContainer}>
-          <Text>Choose From Library</Text>
-        </Pressable>
-        <Pressable onPress={() => console.log("1")} style={styles.rowContainer}>
-          <Text>Cancel</Text>
-        </Pressable>
-      </View>
     </SafeAreaView>
   );
 }

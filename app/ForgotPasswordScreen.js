@@ -70,7 +70,6 @@ export default function ForgotPasswordScreen() {
         Alert.alert("Error", data.message || "Failed to send reset email.");
       }
     } catch (error) {
-      console.error("Error:", error);
       Alert.alert("Error", "Something went wrong. Please try again later.");
     }
   };

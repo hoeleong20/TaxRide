@@ -69,7 +69,6 @@ export default function AuthenticateGDriveScreen() {
         );
       }
     } catch (error) {
-      console.error("Error during Google Drive connection:", error);
       Alert.alert("Error", "Something went wrong. Please try again later.");
     }
   };

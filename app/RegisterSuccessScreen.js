@@ -22,11 +22,8 @@ import BackButtonC from "../components/BackButtonC";
 import { Link, router } from "expo-router";
 
 const logoImg = require("../assets/taxride_logo.png");
-import { BASE_URL } from "@env";
 
 export default function RegisterSuccessScreen() {
-  const [name, setName] = useState("");
-
   const handleGoToLogin = () => {
     router.push("/LoginScreen");
   };

@@ -20,9 +20,7 @@ export const FilesProvider = ({ children }) => {
         const data = await response.json();
         setStructuredData(data);
       } else {
-        console.error("Failed to fetch files from Google Drive");
         const errorData = await response.json();
-        console.error("Error details:", errorData);
       }
     } catch (error) {
       console.error("Error fetching files from Google Drive:", error);
@@ -37,10 +35,6 @@ export const FilesProvider = ({ children }) => {
     fetchFilesFromGDrive();
   }, []);
 
-  // Log whenever `structuredData` updates
-  useEffect(() => {
-    // console.log("structuredData updated:", structuredData);
-  }, [structuredData]);
 
   return (
     <FilesContext.Provider value={{ structuredData, refreshFiles }}>

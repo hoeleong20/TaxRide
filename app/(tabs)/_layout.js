@@ -29,14 +29,6 @@ export default function TabsLayout() {
           options={{
             title: "Files",
           }}
-          // listeners={{
-          //   tabPress: (e) => {
-          //     // Prevent default action
-          //     e.preventDefault();
-          //     // handleCameraPermission();
-          //     handleGalleryPermission();
-          //   },
-          // }}
         />
       </Tabs>
     </ActionSheetProvider>

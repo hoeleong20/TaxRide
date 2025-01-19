@@ -46,9 +46,6 @@ export default function ImagePreviewC({
 
   const [headerVisible, setHeaderVisible] = useState(true);
 
-  // console.log("file id :", fileId);
-  // console.log("file year :", year);
-  // console.log("file category :", category);
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({ x: 0, y: 0 });
 
@@ -104,14 +101,6 @@ export default function ImagePreviewC({
 
   const toggleHeader = () => {
     if (headerVisible) {
-      // console.log(
-      //   modalVisible,
-      //   imageUri,
-      //   imageName,
-      //   fileId,
-      //   year,
-      //   category
-      // );
       setDropdownVisible(false);
       hideHeaderWithAnimation();
     } else {
@@ -131,7 +120,6 @@ export default function ImagePreviewC({
       resetHeader();
       setEditedYear(year);
       setEditedCategory(category);
-      // console.log("file id ", fileId);
     }
   }, [modalVisible, year, category, imageName, fileId]);
 
@@ -153,7 +141,6 @@ export default function ImagePreviewC({
         setDeleteDialogVisible(true);
         break;
       default:
-        console.warn("Unknown action:", action);
         break;
     }
   };
@@ -240,9 +227,7 @@ export default function ImagePreviewC({
         ? editedFilename
         : `${editedFilename}${fileExtension}`;
 
-      console.log(
-        `Submitting edited file with ID: ${fileId}, Filename: ${finalFilename}`
-      );
+
 
       const response = await axios.patch(
         `${BASE_URL}/edit-file?email=${loggedInEmail}`, // Add email to query string
@@ -253,7 +238,6 @@ export default function ImagePreviewC({
           filename: editedFilename,
         }
       );
-      // console.log(response);
 
       Alert.alert("Success", response.data.message);
       setEditDialogVisible(false);
@@ -261,7 +245,6 @@ export default function ImagePreviewC({
       setCurrentImageName(editedFilename);
       setEditedFilename("");
     } catch (error) {
-      console.error("Error updating file:", error);
       Alert.alert("Error", "Failed to update file details.");
     }
   };
@@ -281,7 +264,6 @@ export default function ImagePreviewC({
       await refreshFiles();
       setModalVisible(false);
     } catch (error) {
-      console.error("Error deleting file:", error);
       if (error.response && error.response.status === 404) {
         Alert.alert(
           "Error",
@@ -327,7 +309,6 @@ export default function ImagePreviewC({
           setAspectRatio(width / height);
         },
         (error) => {
-          console.error("Error fetching image size:", error);
           setAspectRatio(1);
         }
       );

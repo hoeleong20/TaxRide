@@ -18,7 +18,6 @@ import { useActionSheet } from "@expo/react-native-action-sheet";
 import * as ImagePicker from "expo-image-picker";
 import * as Linking from "expo-linking";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-// import Parse from "parse/react-native.js";
 import * as FileSystem from "expo-file-system";
 import axios from "axios";
 import Dialog from "react-native-dialog";
@@ -93,10 +92,8 @@ export default function TabBarC({ state, descriptors, navigation }) {
       },
       (buttonIndex) => {
         if (buttonIndex === 0) {
-          console.log("Take Photo selected");
           handleCameraPermission();
         } else if (buttonIndex === 1) {
-          console.log("Choose From Library selected");
           handleGalleryPermission();
         }
       }
@@ -121,10 +118,8 @@ export default function TabBarC({ state, descriptors, navigation }) {
           await handleLaunchCamera();
         }
       } else if (cameraStatus.status === ImagePicker.PermissionStatus.DENIED) {
-        console.log("2");
         const permission = await requestCameraPermission();
         if (permission.granted) {
-          console.log("3");
           await handleLaunchCamera();
         }
         await Linking.openSettings();
@@ -146,10 +141,8 @@ export default function TabBarC({ state, descriptors, navigation }) {
           await handleLaunchImageLibrary();
         }
       } else if (galleryStatus.status === ImagePicker.PermissionStatus.DENIED) {
-        console.log("2");
         const permission = await requestGalleryPermission();
         if (permission.granted) {
-          console.log("3");
           await handleLaunchImageLibrary();
         }
         await Linking.openSettings();
@@ -166,23 +159,14 @@ export default function TabBarC({ state, descriptors, navigation }) {
   const [filename, setFilename] = useState("");
 
   const handleLaunchCamera = useCallback(async () => {
-    console.log("1");
     try {
       // No permissions request is necessary for launching the image library
       let result = await ImagePicker.launchCameraAsync({
-        // mediaTypes: ["images", "videos"],
-        // allowsEditing: true,
-        // aspect: [4, 3],
-        // quality: 1,
+        mediaTypes: "images",
+        quality: 1,
       });
-      console.log("2");
-
-      // AsyncStorage.setItem("savedImage", JSON.stringify(result));
-      // const jsonValue = await AsyncStorage.getItem("savedImage");
-      // console.log(JSON.parse(jsonValue));
 
       if (!result.canceled) {
-        console.log(result.assets[0]?.uri);
         saveImage(result.assets[0]?.uri);
         setImage(result.assets[0].uri);
         setDialogVisible(true); // Show dialog after selecting image
@@ -193,43 +177,28 @@ export default function TabBarC({ state, descriptors, navigation }) {
   }, []);
 
   const handleLaunchImageLibrary = async () => {
-    console.log("Choose From Library selected");
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: "images",
         quality: 1,
       });
 
-      console.log("ImagePicker result:", result);
-
       if (!result.canceled) {
         const uri = result.assets[0]?.uri;
-        console.log("Selected image URI:", uri);
 
         saveImage(uri);
         setImage(uri); // Update state
         setDialogVisible(true); // Show dialog
       }
     } catch (error) {
-      console.error("Error in handleLaunchImageLibrary:", error);
       alert(`Error: ${error.message}`);
     }
   };
 
-  useEffect(() => {
-    console.log("Updated image state:", image);
-  }, [image]);
-
-  useEffect(() => {
-    console.log("Dialog visibility changed:", dialogVisible);
-  }, [dialogVisible]);
-
   const saveImage = async (imageUri) => {
     if (!imageUri) {
-      console.error("Error: imageUri is null or undefined");
       return;
     }
-    console.log("Image URI:", imageUri); // Log the URI
     const fileName = `my-image-${Date.now()}.png`;
     const destinationPath = `${FileSystem.documentDirectory}${fileName}`;
 
@@ -238,17 +207,14 @@ export default function TabBarC({ state, descriptors, navigation }) {
         from: imageUri,
         to: destinationPath,
       });
-      console.log("Image saved to:", destinationPath);
     } catch (error) {
       console.error("Error saving image:", error);
     }
   };
 
   const uploadImage = useCallback(async () => {
-    console.log("Image URI before upload:", image);
     try {
       if (!image) {
-        console.error("No image found, exiting upload.");
         return;
       }
 
@@ -257,8 +223,6 @@ export default function TabBarC({ state, descriptors, navigation }) {
       if (!fileInfo.exists) {
         throw new Error("The image file does not exist.");
       }
-
-      console.log("File info:", fileInfo);
 
       // Determine MIME type and map it to an extension
       const mimeType = fileInfo.uri.split(".").pop(); // Get the file extension
@@ -276,19 +240,12 @@ export default function TabBarC({ state, descriptors, navigation }) {
       const fileExtension = mimeTypeKey ? `.${mimeTypeKey}` : ".jpg"; // Default to .jpg if type is unknown
       const contentType = mimeToExtension[mimeTypeKey] || "image/jpg";
 
-      console.log("File extension and type determined:", {
-        fileExtension,
-        contentType,
-      });
-
       const formData = new FormData();
       formData.append("file", {
         uri: image,
         name: `${year}-${category}-${filename}${fileExtension}`,
         type: contentType,
       });
-
-      console.log("FormData prepared:", formData);
 
       const response = await axios.post(
         `${BASE_URL}/upload?email=${loggedInEmail}`,
@@ -300,7 +257,6 @@ export default function TabBarC({ state, descriptors, navigation }) {
         }
       );
 
-      console.log("File uploaded successfully:", response.data);
       await refreshFiles();
 
       Alert.alert(
@@ -316,7 +272,6 @@ export default function TabBarC({ state, descriptors, navigation }) {
       setFilename("");
     } catch (error) {
       if (error.response && error.response.status === 507) {
-        console.warn("Insufficient Google Drive space. Saving file locally.");
         try {
           const localFiles =
             JSON.parse(await AsyncStorage.getItem("localFiles")) || [];
@@ -334,7 +289,6 @@ export default function TabBarC({ state, descriptors, navigation }) {
             [{ text: "OK" }]
           );
         } catch (localError) {
-          console.error("Error saving file locally:", localError);
           Alert.alert(
             "Error",
             "An error occurred while saving the file locally. Please try again later.",
@@ -342,7 +296,6 @@ export default function TabBarC({ state, descriptors, navigation }) {
           );
         }
       } else {
-        console.error("Error in uploadImage:", error);
         alert(`Upload failed: ${error.message}`);
       }
     }
@@ -371,7 +324,6 @@ export default function TabBarC({ state, descriptors, navigation }) {
         // Determine file type from URI
         const fileInfo = await FileSystem.getInfoAsync(fileUri);
         if (!fileInfo.exists) {
-          console.warn(`File ${file.name} does not exist locally.`);
           files.splice(i, 1); // Remove non-existent file
           i--; // Adjust index after removal
           continue;
@@ -413,32 +365,17 @@ export default function TabBarC({ state, descriptors, navigation }) {
           );
 
           if (response.status === 200) {
-            console.log(`File ${finalFileName} uploaded successfully.`);
             files.splice(i, 1); // Remove successfully uploaded file
             i--; // Adjust index after removal
             await refreshFiles();
             successfullyUploadedCount++; // Increment success count
           } else if (response.status === 507) {
-            console.warn(
-              `Google Drive has insufficient space. File ${finalFileName} not uploaded.`
-            );
             hasSpace = false; // Set flag to stop further uploads
           } else {
-            console.warn(
-              `File ${finalFileName} could not be uploaded. Retrying later.`
-            );
           }
         } catch (error) {
           if (error.response && error.response.status === 507) {
-            console.warn(
-              `Google Drive has insufficient space. File ${finalFileName} not uploaded.`
-            );
             hasSpace = false; // Set flag to stop further uploads
-          } else {
-            console.error(
-              `Error uploading file ${finalFileName}:`,
-              error.message
-            );
           }
         }
       }
@@ -464,7 +401,6 @@ export default function TabBarC({ state, descriptors, navigation }) {
         );
       }
     } catch (error) {
-      console.error("Error retrying local uploads:", error);
       Alert.alert("Error", "An error occurred while retrying uploads.", [
         { text: "OK" },
       ]);
@@ -599,7 +535,6 @@ export default function TabBarC({ state, descriptors, navigation }) {
               <Dialog.Button
                 label="Cancel"
                 onPress={() => {
-                  console.log("Dialog canceled");
                   setDialogVisible(false);
                   setImage(""); // Clear image on cancel
                   setYear("");
@@ -620,7 +555,6 @@ export default function TabBarC({ state, descriptors, navigation }) {
                     return;
                   }
 
-                  console.log("Dialog 'Upload' button pressed");
                   setDialogVisible(false);
                   await uploadImage(); // Await upload to avoid conflicts
                 }}

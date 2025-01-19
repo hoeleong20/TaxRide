@@ -20,9 +20,7 @@ export const LoginProvider = ({ children }) => {
           });
           if (response.data && response.data.name) {
             setLoggedInName(response.data.name); // Assign the name to the state
-          } else {
-            console.warn("User name not found in response.");
-          }
+          } 
         } catch (error) {
           console.error("Failed to fetch user name:", error.message || error);
         }

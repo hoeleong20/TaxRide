@@ -79,11 +79,12 @@ export default function SignUpScreen() {
     validateField("cfmPassword", cfmPassword);
 
     if (
-      tooltip.name ||tooltip.email || tooltip.password || tooltip.cfmPassword
+      tooltip.name ||
+      tooltip.email ||
+      tooltip.password ||
+      tooltip.cfmPassword
     ) {
-      Alert.alert(
-        "Error","There exist invalid input field."
-      );
+      Alert.alert("Error", "There exist invalid input field.");
       return;
     }
 
@@ -101,7 +102,6 @@ export default function SignUpScreen() {
         Alert.alert("Error", data.message || "Signup failed");
       }
     } catch (error) {
-      console.error("Error:", error);
       Alert.alert("Error", "Something went wrong. Please try again later.");
     }
   };

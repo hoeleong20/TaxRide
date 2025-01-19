@@ -25,8 +25,6 @@ export default function WelcomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="default" />
-      {/* <View style={styles.topContainer}></View>
-       */}
       <ImageBackground
         source={image}
         resizeMode="cover"
@@ -37,17 +35,12 @@ export default function WelcomeScreen() {
           <Image source={logoImg} style={styles.logoImgStyle} />
           <Text style={styles.logoText}>TaxRide</Text>
         </View>
-        {/* <Link href="/LoginScreen" asChild> */}
         <ButtonC
           textContent="Login"
           buttonStyle={styles.loginButton}
           textStyle={styles.loginText}
           onPress={() => router.push("/LoginScreen")}
         />
-        {/* <Pressable style={styles.loginButton}>
-              <Text style={styles.loginText}>Login</Text>
-            </Pressable> */}
-        {/* </Link> */}
         <ButtonC
           textContent="Sign Up"
           buttonStyle={styles.signUpButton}
@@ -60,9 +53,6 @@ export default function WelcomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    // paddingTop: StatusBar.currentHeight,
-  },
   topContainer: {
     height: "45%",
     backgroundColor: "red",
